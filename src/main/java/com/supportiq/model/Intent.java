@@ -1,16 +1,22 @@
 package com.supportiq.model;
 
 public class Intent {
-    private String name;
+    private MainCategory mainCategory;
+    private SubCategory subCategory;
     private double confidence;
 
-    public Intent(String name, double confidence) {
-        this.name = name;
+    public Intent(MainCategory mainCategory, SubCategory subCategory, double confidence) {
+        this.mainCategory = mainCategory;
+        this.subCategory = subCategory;
         this.confidence = confidence;
     }
 
-    public String getName() {
-        return name;
+    public MainCategory getMainCategory() {
+        return mainCategory;
+    }
+
+    public SubCategory getSubCategory() {
+        return subCategory;
     }
 
     public double getConfidence() {

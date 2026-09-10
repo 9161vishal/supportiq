@@ -1,13 +1,21 @@
 package com.supportiq.model;
 
-public class HistoricalCase {
-    private String id;
+import java.util.List;
 
-    public HistoricalCase(String id) {
-        this.id = id;
+public class HistoricalCase {
+    private String rootTweetId;
+    private List<List<String>> paths;
+
+    public HistoricalCase(String rootTweetId, List<List<String>> paths) {
+        this.rootTweetId = rootTweetId;
+        this.paths = paths;
     }
 
-    public String getId() {
-        return id;
+    public String getRootTweetId() {
+        return rootTweetId;
+    }
+
+    public List<List<String>> getPaths() {
+        return paths;
     }
 }
