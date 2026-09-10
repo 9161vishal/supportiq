@@ -1,5 +1,8 @@
 package com.supportiq.model;
 
+import com.supportiq.model.intent.MainCategory;
+import com.supportiq.model.intent.SubCategory;
+
 public class Intent {
     private MainCategory mainCategory;
     private SubCategory subCategory;

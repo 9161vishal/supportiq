@@ -1,0 +1,10 @@
+package com.supportiq.model.intent;
+
+public enum AmazonPaySubCategory implements SubCategory {
+    AMAZON_PAY_PAYMENT_OR_TRANSACTION,
+    AMAZON_PAY_BALANCE,
+    AMAZON_PAY_CASHBACK_OR_REWARDS,
+    AMAZON_PAY_REFUND,
+    AMAZON_PAY_ACCOUNT,
+    AMAZON_PAY_FRAUD_OR_SUSPICIOUS_TRANSACTION
+}

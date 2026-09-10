@@ -3,6 +3,10 @@ package com.supportiq.model;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.supportiq.model.intent.MainCategory;
+import com.supportiq.model.intent.DeliverySubCategory;
+import com.supportiq.model.intent.GeneralInformationSubCategory;
+
 public class IntentTest {
     @Test
     public void testMainCategoryValuesExist() {
@@ -12,15 +16,15 @@ public class IntentTest {
 
     @Test
     public void testSubCategoryValuesExist() {
-        assertNotNull(SubCategory.valueOf("DELIVERY_LATE"));
-        assertNotNull(SubCategory.valueOf("OTHER_NON_ACTIONABLE_MESSAGE"));
+        assertNotNull(DeliverySubCategory.valueOf("DELIVERY_LATE"));
+        assertNotNull(GeneralInformationSubCategory.valueOf("OTHER_NON_ACTIONABLE_MESSAGE"));
     }
 
     @Test
     public void testIntentCreation() {
-        Intent intent = new Intent(MainCategory.DELIVERY_AND_TRACKING, SubCategory.DELIVERY_LATE, 0.95);
+        Intent intent = new Intent(MainCategory.DELIVERY_AND_TRACKING, DeliverySubCategory.DELIVERY_LATE, 0.95);
         assertEquals(MainCategory.DELIVERY_AND_TRACKING, intent.getMainCategory());
-        assertEquals(SubCategory.DELIVERY_LATE, intent.getSubCategory());
+        assertEquals(DeliverySubCategory.DELIVERY_LATE, intent.getSubCategory());
         assertEquals(0.95, intent.getConfidence(), 0.001);
     }
 }

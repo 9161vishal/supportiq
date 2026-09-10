@@ -13,8 +13,19 @@ public class SupportResponse {
         this.evidence = evidence;
     }
 
-    public Intent getIntent() { return intent; }
-    public EscalationDecision getDecision() { return decision; }
-    public String getReply() { return reply; }
-    public RetrievedEvidence getEvidence() { return evidence; }
+    public Intent getIntent() {
+        return intent;
+    }
+
+    public EscalationDecision getDecision() {
+        return decision;
+    }
+
+    public String getReply() {
+        return reply;
+    }
+
+    public RetrievedEvidence getEvidence() {
+        return evidence;
+    }
 }
