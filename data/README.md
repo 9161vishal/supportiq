@@ -12,4 +12,5 @@
   ```
 - Tweet text is always resolved directly from the original CSV.
 - The original dataset is never modified.
-- Note: Mapping files have not yet been generated. They will be generated in Phase 2B.
+- **Phase 2B Step 1 Complete**: The `intermediate_paths.jsonl` file has been generated containing ID-only structural paths for AmazonHelp interactions.
+- Note: Category and Subcategory classification (Phase 2B Step 2) has NOT started yet.

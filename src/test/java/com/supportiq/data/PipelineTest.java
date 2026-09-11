@@ -45,7 +45,12 @@ public class PipelineTest {
             + "12,AmazonHelp,False,12,Cycle end,,11\n"
             
             // Scenario 8: Missing response (13 has response 14, but 14 is missing)
-            + "13,AmazonHelp,False,13,Response missing,14, \n";
+            + "13,AmazonHelp,False,13,Response missing,14, \n"
+            
+            // Scenario 9: Ancestor is other company (15 -> 16 -> 17)
+            + "15,CustomerE,True,15,Hello Apple,, \n"
+            + "16,AppleSupport,False,16,Hi!,17,15\n"
+            + "17,AmazonHelp,False,17,We can help too.,,16\n";
 
         Files.writeString(tempCsv, csvContent);
         
@@ -97,5 +102,15 @@ public class PipelineTest {
             }
         }
         assertFalse(foundCycle, "Isolated cycle must be safely ignored");
+        
+        // Check other company ancestor scenario
+        boolean foundExcludedAncestor = false;
+        for (String line : lines) {
+            if (line.contains("\"rootTweetId\":\"17\"")) {
+                foundExcludedAncestor = line.contains("[\"17\"]");
+            }
+            assertFalse(line.contains("\"15\"") || line.contains("\"16\""), "Must exclude AppleSupport ancestor branch");
+        }
+        assertTrue(foundExcludedAncestor, "AmazonHelp tweet with other company ancestor must be isolated");
     }
 }

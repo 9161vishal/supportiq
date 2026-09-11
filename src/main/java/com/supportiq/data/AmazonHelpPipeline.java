@@ -166,6 +166,9 @@ public class AmazonHelpPipeline {
 
             long curr = graph.getParent(ahId);
             while (curr != -1L) {
+                if (otherCompanyTweets.contains(curr)) {
+                    break; // Do not inherit other company tweets
+                }
                 if (!validIds.add(curr)) {
                     validator.incrementCycle();
                     break; // Cycle detected, stop tracing

@@ -31,4 +31,5 @@ To run the data processing (when implemented), the raw dataset must be placed lo
 ## Current Development Status
 - **Phase 1**: Completed (Architecture skeleton and contracts created).
 - **Phase 2A**: Completed (Data and Intent Infrastructure finalized. File readers, builders, and validation are in place).
-- **Phase 2B**: Pending (Actual CSV processing, dataset scanning, mapping generation). No LLMs, embeddings, or ML components are implemented yet.
+- **Phase 2B Step 1**: Completed. The full TWCS dataset (~500MB) was successfully processed using a primitive-memory graph to extract AmazonHelp interactions. The `intermediate_paths.jsonl` output has been generated. The raw CSV remains the immutable source of truth, and mappings remain purely ID-based.
+- **Phase 2B Step 2**: Pending (Category/subcategory mapping and intent classification have NOT started yet). No LLMs, embeddings, or ML components are implemented yet.
