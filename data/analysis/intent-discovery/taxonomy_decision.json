@@ -1,0 +1,778 @@
+{
+  "decisions": [
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "PACKAGE_MARKED_DELIVERED",
+      "heuristic_count": 12,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "TRACKING_NOT_UPDATED",
+      "heuristic_count": 55,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "DELIVERY_ATTEMPT_FAILED",
+      "heuristic_count": 8,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "DELIVERY_DATE",
+      "heuristic_count": 51,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "GENERAL_DELIVERY_QUESTION",
+      "heuristic_count": 1234,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "COURIER_OR_DRIVER_PROBLEM",
+      "heuristic_count": 7,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "DELIVERY_AND_TRACKING",
+      "subcategory": "DELIVERY_LATE",
+      "heuristic_count": 124,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "PRE_ORDER",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "ORDER_STATUS",
+      "heuristic_count": 36,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "PLACE_ORDER",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "ORDER_CONFIRMATION",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "CANCEL_ORDER",
+      "heuristic_count": 123,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "DUPLICATE_ORDER",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "GENERAL_ORDER_QUESTION",
+      "heuristic_count": 1416,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ORDER_MANAGEMENT",
+      "subcategory": "CHANGE_ORDER",
+      "heuristic_count": 177,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "REFUND_PENDING",
+      "heuristic_count": 4,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "REFUND_REQUEST",
+      "heuristic_count": 40,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "REFUND_AFTER_CANCELLATION_OR_RETURN",
+      "heuristic_count": 68,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "RETURN_SHIPPING",
+      "heuristic_count": 10,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "RETURN_ELIGIBILITY",
+      "heuristic_count": 6,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "REFUND_AMOUNT",
+      "heuristic_count": 16,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "RETURN_REQUEST",
+      "heuristic_count": 12,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "RETURNS_AND_REFUNDS",
+      "subcategory": "RETURN_STATUS",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "WRONG_PRODUCT",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "OTHER_PRODUCT_PROBLEM",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "REPLACEMENT_REQUEST",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "DAMAGED_PRODUCT",
+      "heuristic_count": 93,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "MISSING_ITEM_OR_COMPONENT",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "PRODUCT_QUALITY_PROBLEM",
+      "heuristic_count": 28,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRODUCT_PROBLEM",
+      "subcategory": "DEFECTIVE_OR_NOT_WORKING",
+      "heuristic_count": 7,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "GENERAL_PAYMENT_PROBLEM",
+      "heuristic_count": 74,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "PAYMENT_DECLINED",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "CHARGE_OR_BILLING_PROBLEM",
+      "heuristic_count": 34,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "PAYMENT_FAILED",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "UNEXPECTED_CHARGE",
+      "heuristic_count": 3,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "PAYMENT_VERIFICATION",
+      "heuristic_count": 4,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PAYMENT_AND_BILLING",
+      "subcategory": "CARD_CHARGED",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "PRIME_TRIAL",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "PRIME_MEMBERSHIP_CHARGE",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "PRIME_DELIVERY_BENEFIT",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "PRIME_MEMBERSHIP_OR_BENEFITS",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "GENERAL_PRIME_QUESTION",
+      "heuristic_count": 1551,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "PRIME_RENEWAL",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIME_MEMBERSHIP",
+      "subcategory": "CANCEL_PRIME",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIME_VIDEO_AND_DIGITAL_CONTENT",
+      "subcategory": "DIGITAL_SUBSCRIPTION_PROBLEM",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIME_VIDEO_AND_DIGITAL_CONTENT",
+      "subcategory": "PRIME_VIDEO_GENERAL",
+      "heuristic_count": 307,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRIME_VIDEO_AND_DIGITAL_CONTENT",
+      "subcategory": "PLAYBACK_OR_TECHNICAL_PROBLEM",
+      "heuristic_count": 53,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRIME_VIDEO_AND_DIGITAL_CONTENT",
+      "subcategory": "CONTENT_AVAILABILITY",
+      "heuristic_count": 5,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRIME_VIDEO_AND_DIGITAL_CONTENT",
+      "subcategory": "MOVIE_OR_SHOW_PURCHASE_OR_RENTAL",
+      "heuristic_count": 83,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRIME_VIDEO_AND_DIGITAL_CONTENT",
+      "subcategory": "DIGITAL_CONTENT_ACCESS",
+      "heuristic_count": 5,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "ALEXA_PROBLEM",
+      "heuristic_count": 166,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "ECHO_PROBLEM",
+      "heuristic_count": 339,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "FIRE_TV_OR_FIRE_TV_STICK_PROBLEM",
+      "heuristic_count": 157,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "DEVICE_SETUP",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "DEVICE_CONNECTIVITY",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "GENERAL_DEVICE_QUESTION",
+      "heuristic_count": 30,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "AMAZON_DEVICES",
+      "subcategory": "DEVICE_NOT_WORKING",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "KINDLE_AND_READING",
+      "subcategory": "KINDLE_OR_EBOOK_ISSUE",
+      "heuristic_count": 206,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "KINDLE_AND_READING",
+      "subcategory": "KINDLE_OR_READING_GENERAL",
+      "heuristic_count": 405,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "KINDLE_AND_READING",
+      "subcategory": "KINDLE_BOOK_DOWNLOAD",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "KINDLE_AND_READING",
+      "subcategory": "KINDLE_BOOK_ACCESS",
+      "heuristic_count": 128,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "KINDLE_AND_READING",
+      "subcategory": "KINDLE_DEVICE_PROBLEM",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "KINDLE_AND_READING",
+      "subcategory": "KINDLE_BOOK_PURCHASE_OR_PRICING",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_PAY",
+      "subcategory": "AMAZON_PAY_BALANCE",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_PAY",
+      "subcategory": "AMAZON_PAY_REFUND",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_PAY",
+      "subcategory": "AMAZON_PAY_PAYMENT_OR_TRANSACTION",
+      "heuristic_count": 37,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "AMAZON_PAY",
+      "subcategory": "AMAZON_PAY_CASHBACK_OR_REWARDS",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_PAY",
+      "subcategory": "AMAZON_PAY_ACCOUNT",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "AMAZON_PAY",
+      "subcategory": "AMAZON_PAY_FRAUD_OR_SUSPICIOUS_TRANSACTION",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "ACCOUNT_VERIFICATION",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "HACKED_OR_COMPROMISED_ACCOUNT",
+      "heuristic_count": 5,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "PASSWORD_PROBLEM",
+      "heuristic_count": 23,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "ACCOUNT_LOCKED",
+      "heuristic_count": 84,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "CANNOT_LOGIN",
+      "heuristic_count": 37,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "ACCOUNT_ACCESS_OR_DETAILS",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "ACCOUNT_AND_LOGIN",
+      "subcategory": "EMAIL_OR_PHONE_CHANGE",
+      "heuristic_count": 282,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ADDRESS_AND_DELIVERY_PREFERENCES",
+      "subcategory": "DELIVERY_LOCATION_OR_SAFE_PLACE",
+      "heuristic_count": 10,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ADDRESS_AND_DELIVERY_PREFERENCES",
+      "subcategory": "ADDRESS_PROBLEM_OR_CHANGE",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "ADDRESS_AND_DELIVERY_PREFERENCES",
+      "subcategory": "ADD_OR_REMOVE_ADDRESS",
+      "heuristic_count": 69,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "ADDRESS_AND_DELIVERY_PREFERENCES",
+      "subcategory": "WRONG_DELIVERY_ADDRESS",
+      "heuristic_count": 4,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "ADDRESS_AND_DELIVERY_PREFERENCES",
+      "subcategory": "DELIVERY_PREFERENCE",
+      "heuristic_count": 5,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PROMOTIONS_AND_DISCOUNTS",
+      "subcategory": "PROMOTION_OR_DISCOUNT",
+      "heuristic_count": 48,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PROMOTIONS_AND_DISCOUNTS",
+      "subcategory": "COUPON_PROBLEM",
+      "heuristic_count": 3,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PROMOTIONS_AND_DISCOUNTS",
+      "subcategory": "DISCOUNT_NOT_APPLIED",
+      "heuristic_count": 14,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PROMOTIONS_AND_DISCOUNTS",
+      "subcategory": "OFFER_ELIGIBILITY",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PROMOTIONS_AND_DISCOUNTS",
+      "subcategory": "CASHBACK_OR_PROMOTIONAL_OFFER",
+      "heuristic_count": 11,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GIFT_CARDS",
+      "subcategory": "GIFT_CARD_CHARGE_OR_PAYMENT",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "GIFT_CARDS",
+      "subcategory": "GIFT_CARD_BALANCE",
+      "heuristic_count": 20,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GIFT_CARDS",
+      "subcategory": "GIFT_CARD_NOT_RECEIVED",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "GIFT_CARDS",
+      "subcategory": "GIFT_CARD_NOT_WORKING",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "GIFT_CARDS",
+      "subcategory": "GIFT_CARD_REDEMPTION",
+      "heuristic_count": 10,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GIFT_CARDS",
+      "subcategory": "GIFT_CARD_PURCHASE",
+      "heuristic_count": 12,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "MARKETPLACE_AND_SELLERS",
+      "subcategory": "SELLER_COMMUNICATION",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "MARKETPLACE_AND_SELLERS",
+      "subcategory": "SELLER_RETURN_OR_REFUND",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "MARKETPLACE_AND_SELLERS",
+      "subcategory": "SELLER_ACCOUNT",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "MARKETPLACE_AND_SELLERS",
+      "subcategory": "SELLER_FRAUD_OR_COUNTERFEIT",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "MARKETPLACE_AND_SELLERS",
+      "subcategory": "THIRD_PARTY_SELLER_PROBLEM",
+      "heuristic_count": 100,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "MARKETPLACE_AND_SELLERS",
+      "subcategory": "SELLER_ORDER_OR_DELIVERY",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_INFORMATION_AND_PRICING",
+      "subcategory": "PRODUCT_AVAILABILITY",
+      "heuristic_count": 260,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRODUCT_INFORMATION_AND_PRICING",
+      "subcategory": "PRODUCT_SPECIFICATION",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_INFORMATION_AND_PRICING",
+      "subcategory": "GENERAL_PRODUCT_QUESTION",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_INFORMATION_AND_PRICING",
+      "subcategory": "PRICE_DIFFERENCE_OR_PRICE_CHANGE",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRODUCT_INFORMATION_AND_PRICING",
+      "subcategory": "PRODUCT_PRICE_OR_PRICING",
+      "heuristic_count": 84,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRODUCT_INFORMATION_AND_PRICING",
+      "subcategory": "PRODUCT_INFORMATION",
+      "heuristic_count": 175,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "SHIPPING_PACKAGING_AND_LOGISTICS",
+      "subcategory": "OPEN_OR_TAMPERED_PACKAGE",
+      "heuristic_count": 8,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "SHIPPING_PACKAGING_AND_LOGISTICS",
+      "subcategory": "SHIPPING_CARRIER_PROBLEM",
+      "heuristic_count": 15,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "SHIPPING_PACKAGING_AND_LOGISTICS",
+      "subcategory": "GENERAL_LOGISTICS_PROBLEM",
+      "heuristic_count": 8,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "SHIPPING_PACKAGING_AND_LOGISTICS",
+      "subcategory": "PACKAGING_PROBLEM",
+      "heuristic_count": 37,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "SHIPPING_PACKAGING_AND_LOGISTICS",
+      "subcategory": "DAMAGED_PACKAGE",
+      "heuristic_count": 328,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "CUSTOMER_SERVICE_EXPERIENCE",
+      "subcategory": "REPEATED_CONTACT",
+      "heuristic_count": 30,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "CUSTOMER_SERVICE_EXPERIENCE",
+      "subcategory": "UNRESOLVED_ISSUE",
+      "heuristic_count": 12,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "CUSTOMER_SERVICE_EXPERIENCE",
+      "subcategory": "PRAISE_OR_APPRECIATION",
+      "heuristic_count": 194,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "CUSTOMER_SERVICE_EXPERIENCE",
+      "subcategory": "NO_OR_DELAYED_RESPONSE",
+      "heuristic_count": 12,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "CUSTOMER_SERVICE_EXPERIENCE",
+      "subcategory": "POOR_CUSTOMER_SERVICE",
+      "heuristic_count": 26,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "CUSTOMER_SERVICE_EXPERIENCE",
+      "subcategory": "GENERAL_SERVICE_COMPLAINT",
+      "heuristic_count": 300,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "PRIVACY_AND_SECURITY",
+      "subcategory": "SECURITY_OR_VERIFICATION_PROBLEM",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRIVACY_AND_SECURITY",
+      "subcategory": "SUSPICIOUS_ACTIVITY",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIVACY_AND_SECURITY",
+      "subcategory": "ACCOUNT_SECURITY",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    },
+    {
+      "category": "PRIVACY_AND_SECURITY",
+      "subcategory": "PERSONAL_INFORMATION_CONCERN",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIVACY_AND_SECURITY",
+      "subcategory": "UNAUTHORIZED_ACCESS",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "PRIVACY_AND_SECURITY",
+      "subcategory": "FRAUD_CONCERN",
+      "heuristic_count": 94,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "GENERAL_COMPLAINT",
+      "heuristic_count": 3,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "GENERAL_INFORMATION",
+      "heuristic_count": 1,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "FEEDBACK",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "PRAISE_OR_APPRECIATION",
+      "heuristic_count": 194,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "SOCIAL_OR_CONVERSATIONAL",
+      "heuristic_count": 2502,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "OTHER_NON_ACTIONABLE_MESSAGE",
+      "heuristic_count": 2,
+      "decision": "WEAK_EVIDENCE"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "GENERAL_AMAZON_QUESTION",
+      "heuristic_count": 131,
+      "decision": "SUPPORTED"
+    },
+    {
+      "category": "GENERAL_INFORMATION_AND_NON_SUPPORT",
+      "subcategory": "UNKNOWN",
+      "heuristic_count": 0,
+      "decision": "MISSING_EVIDENCE"
+    }
+  ]
+}

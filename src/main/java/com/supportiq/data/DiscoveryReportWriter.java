@@ -16,7 +16,7 @@ public class DiscoveryReportWriter {
     }
 
     public void writeSummary(long totalInteractions, long validMessages, long missingIds, 
-                             Map<String, Integer> categoryCounts) throws IOException {
+                             Map<String, Integer> categoryCounts, Map<String, Integer> subcategoryCounts) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("==================================================\n");
         sb.append("INTENT DISCOVERY SUMMARY REPORT\n");
@@ -33,31 +33,115 @@ public class DiscoveryReportWriter {
         Files.writeString(outDir.resolve("summary_report.txt"), sb.toString());
     }
 
-    public void writeCategoryValidation(Map<IntentTaxonomy, List<String>> examples) throws IOException {
+    public void writeTaxonomyEvidence(Map<String, Map<String, Object>> taxonomyEvidence) throws IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n  \"categories\": [\n");
+        sb.append("{\n  \"taxonomy\": [\n");
         
         IntentTaxonomy[] values = IntentTaxonomy.values();
         for (int i = 0; i < values.length; i++) {
             IntentTaxonomy tax = values[i];
             sb.append("    {\n");
             sb.append("      \"category\": \"").append(tax.name()).append("\",\n");
+            Map<String, Object> catData = taxonomyEvidence.get(tax.name());
+            
+            // Category examples
             sb.append("      \"examples\": [\n");
-            List<String> exs = examples.get(tax);
-            if (exs != null) {
-                for (int j = 0; j < exs.size(); j++) {
-                    sb.append("        \"").append(escapeJson(exs.get(j))).append("\"");
-                    if (j < exs.size() - 1) sb.append(",");
+            List<String> catExs = (List<String>) catData.get("examples");
+            for (int j = 0; j < catExs.size(); j++) {
+                sb.append("        \"").append(escapeJson(catExs.get(j))).append("\"");
+                if (j < catExs.size() - 1) sb.append(",");
+                sb.append("\n");
+            }
+            sb.append("      ],\n");
+            
+            // Category confusing
+            sb.append("      \"confusing_intents\": [\n");
+            List<String> catConf = (List<String>) catData.get("confusing_intents");
+            for (int j = 0; j < catConf.size(); j++) {
+                sb.append("        \"").append(escapeJson(catConf.get(j))).append("\"");
+                if (j < catConf.size() - 1) sb.append(",");
+                sb.append("\n");
+            }
+            sb.append("      ],\n");
+            
+            // Subcategories
+            sb.append("      \"subcategories\": [\n");
+            Map<String, Map<String, Object>> subMap = (Map<String, Map<String, Object>>) catData.get("subcategories");
+            List<String> subs = tax.getSubcategories();
+            for (int k = 0; k < subs.size(); k++) {
+                String subName = subs.get(k);
+                sb.append("        {\n");
+                sb.append("          \"subcategory\": \"").append(subName).append("\",\n");
+                
+                Map<String, Object> subData = subMap.get(subName);
+                
+                sb.append("          \"examples\": [\n");
+                List<String> subExs = (List<String>) subData.get("examples");
+                for (int j = 0; j < subExs.size(); j++) {
+                    sb.append("            \"").append(escapeJson(subExs.get(j))).append("\"");
+                    if (j < subExs.size() - 1) sb.append(",");
                     sb.append("\n");
                 }
+                sb.append("          ],\n");
+                
+                sb.append("          \"confusing_intents\": [\n");
+                List<String> subConf = (List<String>) subData.get("confusing_intents");
+                for (int j = 0; j < subConf.size(); j++) {
+                    sb.append("            \"").append(escapeJson(subConf.get(j))).append("\"");
+                    if (j < subConf.size() - 1) sb.append(",");
+                    sb.append("\n");
+                }
+                sb.append("          ]\n");
+                
+                sb.append("        }");
+                if (k < subs.size() - 1) sb.append(",");
+                sb.append("\n");
             }
             sb.append("      ]\n");
+            
             sb.append("    }");
             if (i < values.length - 1) sb.append(",");
             sb.append("\n");
         }
         sb.append("  ]\n}\n");
-        Files.writeString(outDir.resolve("category_validation.json"), sb.toString());
+        Files.writeString(outDir.resolve("taxonomy_evidence.json"), sb.toString());
+    }
+
+    public void writeTaxonomyDecision(Map<String, Map<String, Object>> taxonomyEvidence, Map<String, Integer> subcategoryCounts) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n  \"decisions\": [\n");
+        
+        IntentTaxonomy[] values = IntentTaxonomy.values();
+        for (int i = 0; i < values.length; i++) {
+            IntentTaxonomy tax = values[i];
+            List<String> subs = tax.getSubcategories();
+            for (int k = 0; k < subs.size(); k++) {
+                String subName = subs.get(k);
+                int count = subcategoryCounts.getOrDefault(subName, 0);
+                
+                String decision = "SUPPORTED";
+                if (count == 0) {
+                    decision = "MISSING_EVIDENCE";
+                } else if (count < 5) {
+                    decision = "WEAK_EVIDENCE";
+                }
+                
+                sb.append("    {\n");
+                sb.append("      \"category\": \"").append(tax.name()).append("\",\n");
+                sb.append("      \"subcategory\": \"").append(subName).append("\",\n");
+                sb.append("      \"heuristic_count\": ").append(count).append(",\n");
+                sb.append("      \"decision\": \"").append(decision).append("\"\n");
+                sb.append("    }");
+                
+                if (i == values.length - 1 && k == subs.size() - 1) {
+                    sb.append("\n");
+                } else {
+                    sb.append(",\n");
+                }
+            }
+        }
+        sb.append("  ]\n}\n");
+        Files.writeString(outDir.resolve("taxonomy_decision.json"), sb.toString());
     }
 
     public void writeAmbiguousAndUncovered(List<String> ambiguous, List<String> uncovered) throws IOException {

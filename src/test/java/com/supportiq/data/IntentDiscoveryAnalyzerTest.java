@@ -41,7 +41,7 @@ public class IntentDiscoveryAnalyzerTest {
         assertTrue(summary.contains("Valid Initial Customer Messages Found: 3"));
         assertTrue(summary.contains("Messages with Missing/Unresolvable IDs: 1"));
         
-        Path categoryFile = outDir.resolve("category_validation.json");
+        Path categoryFile = outDir.resolve("taxonomy_evidence.json");
         assertTrue(Files.exists(categoryFile));
         String categoryJson = Files.readString(categoryFile);
         assertTrue(categoryJson.contains("DELIVERY_AND_TRACKING"));

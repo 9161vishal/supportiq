@@ -23,10 +23,10 @@ public class LlmIntentClassifierTest {
     @BeforeEach
     void setUp() throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/v1/chat/completions", (HttpExchange exchange) -> {
+        server.createContext("/v1beta/models/test-model:generateContent", (HttpExchange exchange) -> {
             String fullResponse;
             if (nextResponse.startsWith("{") && nextResponse.endsWith("}")) {
-                fullResponse = "{ \"choices\": [ { \"message\": { \"content\": \"" + nextResponse.replace("\"", "\\\"").replace("\n", "\\n") + "\" } } ] }";
+                fullResponse = "{ \"candidates\": [ { \"content\": { \"parts\": [ { \"text\": \"" + nextResponse.replace("\"", "\\\"").replace("\n", "\\n") + "\" } ] } } ] }";
             } else {
                 fullResponse = nextResponse; // Return verbatim if malformed
             }
@@ -39,7 +39,7 @@ public class LlmIntentClassifierTest {
         server.setExecutor(null);
         server.start();
 
-        apiUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1/chat/completions";
+        apiUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1beta/models/%s:generateContent";
     }
 
     @AfterEach
@@ -184,5 +184,72 @@ public class LlmIntentClassifierTest {
         assertEquals("UNKNOWN", intent.getSubCategory());
         assertEquals(0.0, intent.getConfidence());
         assertTrue(intent.isUncertain());
+    }
+
+    @Test
+    void classify_retriesOn429() throws Exception {
+        // Create a custom server context that returns 429 on the first try and 200 on the second
+        HttpServer retryServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        int[] attempts = {0};
+        retryServer.createContext("/v1beta/models/test-model:generateContent", (HttpExchange exchange) -> {
+            attempts[0]++;
+            if (attempts[0] == 1) {
+                String response = "Too Many Requests";
+                exchange.sendResponseHeaders(429, response.getBytes("UTF-8").length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(response.getBytes("UTF-8"));
+                }
+            } else {
+                String fullResponse = "{ \"candidates\": [ { \"content\": { \"parts\": [ { \"text\": \"{ \\\"category\\\": \\\"ORDER_MANAGEMENT\\\", \\\"subcategory\\\": \\\"CANCEL_ORDER\\\", \\\"confidence\\\": 0.9, \\\"uncertain\\\": false }\" } ] } } ] }";
+                byte[] responseBytes = fullResponse.getBytes("UTF-8");
+                exchange.sendResponseHeaders(200, responseBytes.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(responseBytes);
+                }
+            }
+        });
+        retryServer.setExecutor(null);
+        retryServer.start();
+
+        String retryUrl = "http://127.0.0.1:" + retryServer.getAddress().getPort() + "/v1beta/models/%s:generateContent";
+        LlmIntentClassifier classifier = new LlmIntentClassifier(retryUrl, "fake-key", "test-model", 0.6);
+
+        // This will block due to exponential backoff (1000ms delay for the first retry)
+        Intent intent = classifier.classify(new CustomerMessage("Cancel my order"));
+
+        assertEquals(IntentTaxonomy.ORDER_MANAGEMENT, intent.getCategory());
+        assertEquals("CANCEL_ORDER", intent.getSubCategory());
+        assertEquals(0.9, intent.getConfidence());
+        assertFalse(intent.isUncertain());
+        assertEquals(2, attempts[0], "Should have retried exactly once");
+
+        retryServer.stop(0);
+    }
+
+    @Test
+    void classify_404FailsFast() throws Exception {
+        HttpServer failServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        int[] attempts = {0};
+        failServer.createContext("/v1beta/models/test-model:generateContent", (HttpExchange exchange) -> {
+            attempts[0]++;
+            String response = "Not Found";
+            exchange.sendResponseHeaders(404, response.getBytes("UTF-8").length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes("UTF-8"));
+            }
+        });
+        failServer.setExecutor(null);
+        failServer.start();
+
+        String failUrl = "http://127.0.0.1:" + failServer.getAddress().getPort() + "/v1beta/models/%s:generateContent";
+        LlmIntentClassifier classifier = new LlmIntentClassifier(failUrl, "fake-key", "test-model", 0.6);
+
+        assertThrows(IllegalStateException.class, () -> {
+            classifier.classify(new CustomerMessage("Cancel my order"));
+        });
+
+        assertEquals(1, attempts[0], "Should not have retried on 404");
+
+        failServer.stop(0);
     }
 }

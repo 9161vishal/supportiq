@@ -32,10 +32,11 @@ public class HistoricalMappingPreparerTest {
     void setUp() throws Exception {
         tempInputJsonl = Files.createTempFile("test_intermediate", ".jsonl");
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempInputJsonl.toFile()))) {
-            // Write 3 fake roots
+            // Write 3 fake roots, plus one duplicate
             bw.write("{\"rootTweetId\":\"100\",\"paths\":[[\"100\",\"101\"]]}\n");
             bw.write("{\"rootTweetId\":\"200\",\"paths\":[[\"200\",\"201\"]]}\n");
             bw.write("{\"rootTweetId\":\"300\",\"paths\":[[\"300\",\"301\"]]}\n");
+            bw.write("{\"rootTweetId\":\"100\",\"paths\":[[\"100\",\"102\"]]}\n"); // Duplicate root ID
         }
 
         tempOutputDir = Files.createTempDirectory("test_output");
@@ -112,7 +113,7 @@ public class HistoricalMappingPreparerTest {
         assertTrue(auditFile.exists());
         
         List<String> auditLines = Files.readAllLines(auditFile.toPath());
-        assertEquals(4, auditLines.size()); // Header + 3 records
+        assertEquals(4, auditLines.size()); // Header + 3 records (duplicate is skipped)
         assertTrue(auditLines.get(1).contains("100"));
         assertTrue(auditLines.get(1).contains("DELIVERY_LATE"));
         assertTrue(auditLines.get(2).contains("200"));
@@ -135,6 +136,13 @@ public class HistoricalMappingPreparerTest {
         
         File echoDir = new File(stagingDir, "AMAZON_DEVICES/ECHO_PROBLEM/mapping.jsonl");
         assertFalse(echoDir.exists(), "Uncertain intents should NOT be mapped into staging directories.");
+        
+        // Check uncertain log exists
+        File uncertainFile = new File(tempOutputDir.toFile(), "audit_uncertain.jsonl");
+        assertTrue(uncertainFile.exists());
+        List<String> uncertainLines = Files.readAllLines(uncertainFile.toPath());
+        assertEquals(1, uncertainLines.size());
+        assertTrue(uncertainLines.get(0).contains("200"));
     }
     
     @Test
@@ -173,5 +181,26 @@ public class HistoricalMappingPreparerTest {
         File auditFile = new File(tempOutputDir.toFile(), "validation_sample.csv");
         List<String> auditLines = Files.readAllLines(auditFile.toPath());
         assertEquals(2, auditLines.size()); // Header + 1 record
+    }
+    
+    @Test
+    void testApiFailureLogging() throws Exception {
+        when(mockClassifier.classify(any(CustomerMessage.class)))
+            .thenThrow(new RuntimeException("API Timeout"));
+            
+        HistoricalMappingPreparer.runValidation(
+                tempInputJsonl.toString(),
+                tempOutputDir.toString(),
+                1,
+                mockClassifier,
+                mockReader,
+                mockIndex
+        );
+
+        File failureFile = new File(tempOutputDir.toFile(), "audit_api_failure.jsonl");
+        assertTrue(failureFile.exists());
+        List<String> failureLines = Files.readAllLines(failureFile.toPath());
+        assertEquals(1, failureLines.size());
+        assertTrue(failureLines.get(0).contains("100"));
     }
 }

@@ -29,9 +29,9 @@ public class LlmIntentClassifier implements IntentClassifier {
 
     @org.springframework.beans.factory.annotation.Autowired
     public LlmIntentClassifier(
-            @Value("${supportiq.classifier.api-url:https://api.openai.com/v1/chat/completions}") String apiUrl,
+            @Value("${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
             @Value("${supportiq.classifier.api-key:}") String apiKey,
-            @Value("${supportiq.classifier.model:gpt-4o-mini}") String model,
+            @Value("${supportiq.classifier.model:gemini-3.6-flash}") String model,
             @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold) {
         this(apiUrl, apiKey, model, confidenceThreshold, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
     }
@@ -60,9 +60,12 @@ public class LlmIntentClassifier implements IntentClassifier {
             String prompt = buildPrompt(message.getText());
             String responseBody = callLlmApi(prompt);
             return parseResponse(responseBody);
+        } catch (IllegalStateException e) {
+            // Fail fast for permanent configuration errors like 404
+            throw e;
         } catch (Exception e) {
             System.err.println("Classification failed: " + e.getMessage());
-            // Safe fallback for failure
+            // Safe fallback for transient failure
             return new Intent(IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT, "UNKNOWN", 0.0, true);
         }
     }
@@ -82,6 +85,8 @@ public class LlmIntentClassifier implements IntentClassifier {
         sb.append("You MUST choose exactly one allowed category, and exactly one subcategory belonging to that category.\n");
         sb.append("NEVER invent a subcategory. Return ONLY labels present in the provided taxonomy.\n");
         sb.append("Classify the PRIMARY customer intent.\n");
+        sb.append("CRITICAL: Distinguish genuine Amazon support requests from general/non-support messages.\n");
+        sb.append("DO NOT use GENERAL_INFORMATION_AND_NON_SUPPORT when a genuine support category (like Order, Delivery, Devices) clearly applies.\n");
         sb.append("\n");
         sb.append("Return a strictly valid JSON object with the following fields:\n");
         sb.append("- \"category\": The exactly matching category string from the allowed list.\n");
@@ -95,46 +100,74 @@ public class LlmIntentClassifier implements IntentClassifier {
     }
 
     private String callLlmApi(String prompt) throws Exception {
-        Map<String, Object> systemMessage = new HashMap<>();
-        systemMessage.put("role", "system");
-        systemMessage.put("content", "You are a helpful assistant that outputs only valid JSON.");
-
-        Map<String, Object> userMessage = new HashMap<>();
-        userMessage.put("role", "user");
-        userMessage.put("content", prompt);
-
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", model);
-        requestBody.put("messages", List.of(systemMessage, userMessage));
-        requestBody.put("response_format", Map.of("type", "json_object"));
-        requestBody.put("temperature", 0.0);
+        requestBody.put("systemInstruction", Map.of("parts", List.of(Map.of("text", "You are a helpful assistant that outputs only valid JSON."))));
+        
+        Map<String, Object> content = new HashMap<>();
+        content.put("parts", List.of(Map.of("text", prompt)));
+        requestBody.put("contents", List.of(content));
+
+        Map<String, Object> genConfig = new HashMap<>();
+        genConfig.put("temperature", 0.0);
+        genConfig.put("responseMimeType", "application/json");
+        requestBody.put("generationConfig", genConfig);
 
         String jsonBody = objectMapper.writeValueAsString(requestBody);
+        String finalUrl = String.format(apiUrl, model) + "?key=" + apiKey;
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
+                .uri(URI.create(finalUrl))
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .timeout(Duration.ofSeconds(30))
                 .build();
 
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) {
-            throw new RuntimeException("API call failed with status " + response.statusCode() + ": " + response.body());
+        int maxRetries = 3;
+        int delayMs = 1000;
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            int code = response.statusCode();
+            if (code == 200) {
+                return response.body();
+            } else if (code == 429 || code >= 500) {
+                if (attempt == maxRetries) {
+                    throw new RuntimeException("API call failed after " + maxRetries + " attempts. Status " + code + ": " + response.body());
+                }
+                Thread.sleep(delayMs);
+                delayMs *= 2; // Exponential backoff
+            } else if (code == 404) {
+                // Permanent configuration error: model not found
+                throw new IllegalStateException("API model not found (404). Check API endpoint or model name (" + model + "): " + response.body());
+            } else {
+                throw new RuntimeException("API call failed with status " + code + ": " + response.body());
+            }
         }
-        return response.body();
+        throw new RuntimeException("API call failed.");
     }
 
     private Intent parseResponse(String responseBody) throws Exception {
         JsonNode rootNode = objectMapper.readTree(responseBody);
-        JsonNode messageNode = rootNode.path("choices").path(0).path("message").path("content");
+        JsonNode messageNode = rootNode.path("candidates").path(0).path("content").path("parts").path(0).path("text");
         
         if (messageNode.isMissingNode()) {
-            throw new RuntimeException("Malformed API response: missing choices[0].message.content");
+            throw new RuntimeException("Malformed API response: missing candidates[0].content.parts[0].text");
         }
         
         String content = messageNode.asText();
+        // Sometimes the API returns markdown blocks like ```json\n{}\n```
+        if (content.startsWith("```json")) {
+            content = content.substring(7);
+            if (content.endsWith("```")) {
+                content = content.substring(0, content.length() - 3);
+            }
+        } else if (content.startsWith("```")) {
+            content = content.substring(3);
+            if (content.endsWith("```")) {
+                content = content.substring(0, content.length() - 3);
+            }
+        }
+        
         JsonNode resultNode = objectMapper.readTree(content);
         
         String categoryStr = resultNode.path("category").asText("");

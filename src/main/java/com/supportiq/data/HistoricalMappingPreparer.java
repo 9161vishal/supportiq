@@ -72,13 +72,13 @@ public class HistoricalMappingPreparer {
 
         String apiKey = System.getProperty("supportiq.classifier.api-key");
         if (apiKey == null || apiKey.isEmpty()) {
-            apiKey = System.getenv("OPENAI_API_KEY");
+            apiKey = System.getenv("GEMINI_API_KEY");
         }
         
         // If testing locally without an API key, we might mock it or just fail gracefully.
         boolean hasApiKey = apiKey != null && !apiKey.isEmpty();
         if (!hasApiKey) {
-            System.err.println("WARNING: No API key provided (-Dsupportiq.classifier.api-key or OPENAI_API_KEY). Validation cannot perform real LLM calls.");
+            System.err.println("WARNING: No API key provided (-Dsupportiq.classifier.api-key or GEMINI_API_KEY). Validation cannot perform real LLM calls.");
             // We will proceed for testing purposes but all calls will fail safely.
             apiKey = "dummy_key_for_tests";
         }
@@ -100,10 +100,12 @@ public class HistoricalMappingPreparer {
             System.exit(1);
         }
 
+        String model = System.getProperty("supportiq.classifier.model", "gemini-3.6-flash");
+
         LlmIntentClassifier classifier = new LlmIntentClassifier(
-                "https://api.openai.com/v1/chat/completions",
+                "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent",
                 apiKey,
-                "gpt-4o-mini",
+                model,
                 0.6
         );
 
@@ -113,6 +115,21 @@ public class HistoricalMappingPreparer {
     public static void runValidation(String inputPath, String outputBaseDir, int limit, 
                                      LlmIntentClassifier classifier, 
                                      CsvOffsetReader csvReader, TweetOffsetIndex offsetIndex) {
+        
+        File baseFile = new File(outputBaseDir);
+        File stagingDirFile = new File(baseFile.getParentFile(), "validation-staging/" + baseFile.getName());
+        
+        // Task 7: Rerun Safety - clear the staging directory before starting to prevent duplication
+        if (stagingDirFile.exists()) {
+            try {
+                java.nio.file.Files.walk(stagingDirFile.toPath())
+                     .sorted(java.util.Comparator.reverseOrder())
+                     .map(java.nio.file.Path::toFile)
+                     .forEach(File::delete);
+            } catch (IOException e) {
+                System.err.println("Failed to clean staging directory: " + e.getMessage());
+            }
+        }
         
         ObjectMapper mapper = new ObjectMapper();
         Map<TaxonomyPair, BufferedWriter> writers = new HashMap<>();
@@ -124,11 +141,20 @@ public class HistoricalMappingPreparer {
         int apiFailures = 0;
         int skippedInteractions = 0;
         
+        java.util.Set<Long> processedRootIds = new java.util.HashSet<>();
+        
         Map<TaxonomyPair, Integer> distribution = new TreeMap<>();
         long startTime = System.currentTimeMillis();
 
+        if (!baseFile.exists()) {
+            baseFile.mkdirs();
+        }
+
         try (BufferedReader br = new BufferedReader(new FileReader(inputPath));
-             BufferedWriter auditWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "validation_sample.csv")))) {
+             BufferedWriter auditWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "validation_sample.csv")));
+             BufferedWriter uncertainWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_uncertain.jsonl")));
+             BufferedWriter invalidWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_invalid.jsonl")));
+             BufferedWriter apiFailureWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_api_failure.jsonl")))) {
             
             // Header for human review
             auditWriter.write("interaction_id,customer_tweet_id,predicted_category,predicted_subcategory,confidence,uncertain,validation_status,reviewer_label,reviewer_notes,customer_text\n");
@@ -139,6 +165,11 @@ public class HistoricalMappingPreparer {
                 if (line.trim().isEmpty()) continue;
                 
                 interactionsSelected++;
+                
+                // Logging progress every 50 items (Task 6)
+                if (interactionsSelected % 50 == 0) {
+                    System.out.println("Processed " + interactionsSelected + "/" + limit);
+                }
                 
                 JsonNode node = mapper.readTree(line);
                 String rootIdStr = node.path("rootTweetId").asText();
@@ -152,6 +183,11 @@ public class HistoricalMappingPreparer {
                     rootId = Long.parseLong(rootIdStr);
                 } catch (NumberFormatException e) {
                     skippedInteractions++;
+                    continue;
+                }
+                
+                if (!processedRootIds.add(rootId)) {
+                    // Duplicate protection
                     continue;
                 }
                 
@@ -184,6 +220,9 @@ public class HistoricalMappingPreparer {
                 boolean apiFailed = false;
                 try {
                     intent = classifier.classify(message);
+                } catch (IllegalStateException e) {
+                    System.err.println("Fatal configuration error: " + e.getMessage());
+                    throw e; // Fail fast for 404 or missing API key
                 } catch (Exception e) {
                     apiFailed = true;
                     apiFailures++;
@@ -197,6 +236,8 @@ public class HistoricalMappingPreparer {
                 if (apiFailed) {
                     pCat = "API_FAILURE";
                     pSub = "API_FAILURE";
+                    apiFailureWriter.write(line);
+                    apiFailureWriter.newLine();
                 } else if (intent != null) {
                     pCat = intent.getCategory().name();
                     pSub = intent.getSubCategory();
@@ -205,10 +246,14 @@ public class HistoricalMappingPreparer {
                     
                     if (unc) {
                         uncertainClassifications++;
+                        uncertainWriter.write(line);
+                        uncertainWriter.newLine();
                     } else if (!intent.getCategory().isValidSubcategory(intent.getSubCategory())) {
                         invalidClassifications++;
                         pCat = "INVALID_CATEGORY";
                         pSub = "INVALID_CATEGORY";
+                        invalidWriter.write(line);
+                        invalidWriter.newLine();
                     } else {
                         successfulClassifications++;
                         TaxonomyPair pair = new TaxonomyPair(intent.getCategory(), intent.getSubCategory());
@@ -216,10 +261,9 @@ public class HistoricalMappingPreparer {
                         
                         // Write to STAGING mapping ONLY if valid and successful
                         // DO NOT write to production directories until human verified.
-                        File baseFile = new File(outputBaseDir);
-                        String stagingDir = new File(baseFile.getParentFile(), "validation-staging/" + baseFile.getName()).getAbsolutePath();
+                        String stagingDir = stagingDirFile.getAbsolutePath();
                         BufferedWriter bw = getWriter(writers, stagingDir, pair);
-                        bw.write(line);
+                        bw.write(line); // Writes EXACT paths array, no fragmentation, no text
                         bw.newLine();
                     }
                 }
@@ -227,7 +271,18 @@ public class HistoricalMappingPreparer {
                 String escapedText = customerText.replace("\"", "\"\"");
                 
                 // Writing to validation_sample.csv (Empty review fields at the end)
-                auditWriter.write(String.format("%s,%s,%s,%s,%.2f,%b,,,\"%s\"\n", 
+                // Fields: 
+                // 1. interaction_id (%s)
+                // 2. customer_tweet_id (%s)
+                // 3. predicted_category (%s)
+                // 4. predicted_subcategory (%s)
+                // 5. confidence (%.2f)
+                // 6. uncertain (%b)
+                // 7. validation_status (empty)
+                // 8. reviewer_label (empty)
+                // 9. reviewer_notes (empty)
+                // 10. customer_text ("%s")
+                auditWriter.write(String.format("%s,%s,%s,%s,%.2f,%b,,,,\"%s\"\n", 
                         rootIdStr, 
                         customerTweetId,
                         pCat, 

@@ -21,7 +21,12 @@ public class IntentDiscoveryAnalyzer {
     private long missingIds = 0;
     
     private final Map<String, Integer> categoryCounts = new HashMap<>();
-    private final Map<IntentTaxonomy, List<String>> categoryExamples = new EnumMap<>(IntentTaxonomy.class);
+    private final Map<String, Integer> subcategoryCounts = new HashMap<>();
+    
+    // For taxonomy_evidence.json
+    private final Map<String, Map<String, Object>> taxonomyEvidence = new HashMap<>();
+    // Format: CategoryName -> { "examples": [], "confusing_intents": [], "subcategories": { SubCategoryName -> { "examples": [], "confusing_intents": [] } } }
+
     private final List<String> ambiguousCases = new ArrayList<>();
     private final List<String> uncoveredCases = new ArrayList<>();
 
@@ -50,7 +55,21 @@ public class IntentDiscoveryAnalyzer {
         
         for (IntentTaxonomy tax : IntentTaxonomy.values()) {
             categoryCounts.put(tax.name(), 0);
-            categoryExamples.put(tax, new ArrayList<>());
+            
+            Map<String, Object> catEvidence = new HashMap<>();
+            catEvidence.put("examples", new ArrayList<String>());
+            catEvidence.put("confusing_intents", new ArrayList<String>());
+            
+            Map<String, Map<String, Object>> subEvidenceMap = new HashMap<>();
+            for (String sub : tax.getSubcategories()) {
+                subcategoryCounts.put(sub, 0);
+                Map<String, Object> subEvidence = new HashMap<>();
+                subEvidence.put("examples", new ArrayList<String>());
+                subEvidence.put("confusing_intents", new ArrayList<String>());
+                subEvidenceMap.put(sub, subEvidence);
+            }
+            catEvidence.put("subcategories", subEvidenceMap);
+            taxonomyEvidence.put(tax.name(), catEvidence);
         }
         categoryCounts.put("UNCOVERED_CASES", 0);
         categoryCounts.put("AMBIGUOUS_CASES", 0);
@@ -68,8 +87,9 @@ public class IntentDiscoveryAnalyzer {
         extractAndAnalyzeTexts(index, roots);
         
         System.out.println("Writing discovery reports...");
-        writer.writeSummary(totalInteractions, validMessages, missingIds, categoryCounts);
-        writer.writeCategoryValidation(categoryExamples);
+        writer.writeSummary(totalInteractions, validMessages, missingIds, categoryCounts, subcategoryCounts);
+        writer.writeTaxonomyEvidence(taxonomyEvidence);
+        writer.writeTaxonomyDecision(taxonomyEvidence, subcategoryCounts);
         writer.writeAmbiguousAndUncovered(ambiguousCases, uncoveredCases);
         writer.writeDiscoveredTerms(termCounts);
         System.out.println("Analysis complete.");
@@ -171,37 +191,82 @@ public class IntentDiscoveryAnalyzer {
             }
         }
         
-        List<IntentTaxonomy> matches = new ArrayList<>();
+        List<IntentTaxonomy> categoryMatches = new ArrayList<>();
+        List<String> subcategoryMatches = new ArrayList<>();
         
         for (IntentTaxonomy tax : IntentTaxonomy.values()) {
+            boolean categoryMatched = false;
             for (String keyword : tax.getKeywords()) {
                 if (text.contains(keyword)) {
-                    matches.add(tax);
-                    break; // Matched this category
+                    categoryMatches.add(tax);
+                    categoryMatched = true;
+                    break;
+                }
+            }
+            
+            if (categoryMatched) {
+                // Find matching subcategories within this category
+                for (Map.Entry<String, List<String>> entry : tax.getSubcategoryKeywords().entrySet()) {
+                    for (String subKeyword : entry.getValue()) {
+                        if (text.contains(subKeyword)) {
+                            subcategoryMatches.add(entry.getKey());
+                            break;
+                        }
+                    }
                 }
             }
         }
         
         String cleanRecord = tweetId + " : " + rawText.replace("\n", " ");
 
-        if (matches.size() == 0) {
+        if (categoryMatches.isEmpty()) {
             categoryCounts.put("UNCOVERED_CASES", categoryCounts.get("UNCOVERED_CASES") + 1);
-            if (uncoveredCases.size() < 20) {
+            if (uncoveredCases.size() < 50) {
                 uncoveredCases.add(cleanRecord);
             }
-        } else if (matches.size() == 1) {
-            IntentTaxonomy matched = matches.get(0);
-            categoryCounts.put(matched.name(), categoryCounts.get(matched.name()) + 1);
-            if (categoryExamples.get(matched).size() < 5) {
-                categoryExamples.get(matched).add(cleanRecord);
+        } else if (categoryMatches.size() == 1) {
+            IntentTaxonomy matchedTax = categoryMatches.get(0);
+            String catName = matchedTax.name();
+            categoryCounts.put(catName, categoryCounts.get(catName) + 1);
+            
+            Map<String, Object> catEvidence = taxonomyEvidence.get(catName);
+            List<String> catExamples = (List<String>) catEvidence.get("examples");
+            if (catExamples.size() < 10) catExamples.add(cleanRecord);
+
+            if (subcategoryMatches.size() == 1) {
+                String sub = subcategoryMatches.get(0);
+                subcategoryCounts.put(sub, subcategoryCounts.get(sub) + 1);
+                
+                Map<String, Map<String, Object>> subEvidenceMap = (Map<String, Map<String, Object>>) catEvidence.get("subcategories");
+                if (subEvidenceMap.containsKey(sub)) {
+                    List<String> subExamples = (List<String>) subEvidenceMap.get(sub).get("examples");
+                    if (subExamples.size() < 10) subExamples.add(cleanRecord);
+                }
+            } else if (subcategoryMatches.size() > 1) {
+                // Ambiguous subcategories within the same category
+                Map<String, Map<String, Object>> subEvidenceMap = (Map<String, Map<String, Object>>) catEvidence.get("subcategories");
+                for (String sub : subcategoryMatches) {
+                    if (subEvidenceMap.containsKey(sub)) {
+                        List<String> confusing = (List<String>) subEvidenceMap.get(sub).get("confusing_intents");
+                        String combo = String.join(" & ", subcategoryMatches);
+                        if (!confusing.contains(combo)) confusing.add(combo);
+                    }
+                }
             }
         } else {
             categoryCounts.put("AMBIGUOUS_CASES", categoryCounts.get("AMBIGUOUS_CASES") + 1);
-            if (ambiguousCases.size() < 20) {
-                // Annotate with what it matched
+            if (ambiguousCases.size() < 50) {
                 List<String> matchedNames = new ArrayList<>();
-                for (IntentTaxonomy m : matches) matchedNames.add(m.name());
+                for (IntentTaxonomy m : categoryMatches) matchedNames.add(m.name());
                 ambiguousCases.add(cleanRecord + " [Matched: " + String.join(", ", matchedNames) + "]");
+            }
+            // Track confusing neighbors for categories
+            for (IntentTaxonomy matchedTax : categoryMatches) {
+                List<String> confusing = (List<String>) taxonomyEvidence.get(matchedTax.name()).get("confusing_intents");
+                List<String> others = new ArrayList<>();
+                for (IntentTaxonomy o : categoryMatches) if (o != matchedTax) others.add(o.name());
+                String conflictStr = String.join(" & ", others);
+                if (!confusing.contains(conflictStr)) confusing.add(conflictStr);
             }
         }
     }
