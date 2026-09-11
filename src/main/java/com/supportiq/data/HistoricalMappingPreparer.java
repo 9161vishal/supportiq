@@ -105,9 +105,9 @@ public class HistoricalMappingPreparer {
 
         LlmIntentClassifier classifier = new LlmIntentClassifier(
                 "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent",
-                apiKey,
                 model,
-                0.6
+                0.6,
+                10L
         );
 
         runValidation(inputPath, outputBaseDir, limit, classifier, csvReader, offsetIndex);

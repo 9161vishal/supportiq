@@ -30,10 +30,11 @@ public class LlmIntentClassifier implements IntentClassifier {
     @org.springframework.beans.factory.annotation.Autowired
     public LlmIntentClassifier(
             @Value("${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
-            @Value("${supportiq.classifier.api-key:}") String apiKey,
             @Value("${supportiq.classifier.model:gemini-3.6-flash}") String model,
-            @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold) {
-        this(apiUrl, apiKey, model, confidenceThreshold, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
+            @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold,
+            @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec) {
+        this(apiUrl, System.getenv("SUPPORTIQ_AI_API_KEY"), model, confidenceThreshold, 
+             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build());
     }
 
     // For testing
@@ -49,11 +50,11 @@ public class LlmIntentClassifier implements IntentClassifier {
     @Override
     public Intent classify(CustomerMessage message) {
         if (message == null || message.getText() == null || message.getText().trim().isEmpty()) {
-            return new Intent(IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT, "UNKNOWN", 0.0, true);
+            return new Intent(null, null, 0.0, true);
         }
         
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalStateException("Classifier API key is not configured. Cannot perform classification.");
+            throw new IllegalStateException("AI API key is not configured.");
         }
 
         try {
@@ -64,9 +65,9 @@ public class LlmIntentClassifier implements IntentClassifier {
             // Fail fast for permanent configuration errors like 404
             throw e;
         } catch (Exception e) {
-            System.err.println("Classification failed: " + e.getMessage());
+            System.err.println("AI classification failed: " + e.getMessage());
             // Safe fallback for transient failure
-            return new Intent(IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT, "UNKNOWN", 0.0, true);
+            return new Intent(null, null, 0.0, true);
         }
     }
 
@@ -91,7 +92,7 @@ public class LlmIntentClassifier implements IntentClassifier {
         sb.append("Return a strictly valid JSON object with the following fields:\n");
         sb.append("- \"category\": The exactly matching category string from the allowed list.\n");
         sb.append("- \"subcategory\": The exactly matching subcategory string belonging to the chosen category.\n");
-        sb.append("- \"confidence\": A float between 0.0 and 1.0 representing your confidence.\n");
+        sb.append("- \"confidence\": A float between 0.0 and 1.0 representing your MODEL confidence (not statistically calibrated confidence).\n");
         sb.append("- \"uncertain\": A boolean. Set to true if the query is vague, ambiguous, or matches multiple intents equally without a clear primary intent.\n");
         sb.append("\n");
         sb.append("Customer Message:\n").append(text).append("\n");
@@ -126,24 +127,37 @@ public class LlmIntentClassifier implements IntentClassifier {
         int delayMs = 1000;
         
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response;
+            try {
+                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            } catch (java.net.http.HttpTimeoutException e) {
+                if (attempt == maxRetries) {
+                    throw new RuntimeException("AI provider timeout after " + maxRetries + " attempts.");
+                }
+                Thread.sleep(delayMs);
+                delayMs *= 2;
+                continue;
+            }
+            
             int code = response.statusCode();
             if (code == 200) {
                 return response.body();
             } else if (code == 429 || code >= 500) {
                 if (attempt == maxRetries) {
-                    throw new RuntimeException("API call failed after " + maxRetries + " attempts. Status " + code + ": " + response.body());
+                    throw new RuntimeException("AI provider call failed with HTTP " + code);
                 }
                 Thread.sleep(delayMs);
                 delayMs *= 2; // Exponential backoff
             } else if (code == 404) {
                 // Permanent configuration error: model not found
-                throw new IllegalStateException("API model not found (404). Check API endpoint or model name (" + model + "): " + response.body());
+                throw new IllegalStateException("AI provider model not found (HTTP 404).");
+            } else if (code == 401 || code == 403) {
+                throw new IllegalStateException("AI provider authentication failed (HTTP " + code + ").");
             } else {
-                throw new RuntimeException("API call failed with status " + code + ": " + response.body());
+                throw new RuntimeException("AI provider call failed with HTTP " + code);
             }
         }
-        throw new RuntimeException("API call failed.");
+        throw new RuntimeException("AI classification request failed.");
     }
 
     private Intent parseResponse(String responseBody) throws Exception {
@@ -154,7 +168,7 @@ public class LlmIntentClassifier implements IntentClassifier {
             throw new RuntimeException("Malformed API response: missing candidates[0].content.parts[0].text");
         }
         
-        String content = messageNode.asText();
+        String content = messageNode.asText().trim();
         // Sometimes the API returns markdown blocks like ```json\n{}\n```
         if (content.startsWith("```json")) {
             content = content.substring(7);
@@ -167,6 +181,7 @@ public class LlmIntentClassifier implements IntentClassifier {
                 content = content.substring(0, content.length() - 3);
             }
         }
+        content = content.trim();
         
         JsonNode resultNode = objectMapper.readTree(content);
         
@@ -181,18 +196,15 @@ public class LlmIntentClassifier implements IntentClassifier {
 
         IntentTaxonomy category;
         try {
+            if (categoryStr == null || categoryStr.isEmpty()) {
+                return new Intent(null, null, 0.0, true);
+            }
             category = IntentTaxonomy.valueOf(categoryStr);
             if (!category.isValidSubcategory(subcategoryStr)) {
-                category = IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT;
-                subcategoryStr = "UNKNOWN";
-                confidence = 0.0;
-                uncertain = true;
+                return new Intent(null, null, 0.0, true);
             }
         } catch (IllegalArgumentException e) {
-            category = IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT;
-            subcategoryStr = "UNKNOWN";
-            confidence = 0.0;
-            uncertain = true;
+            return new Intent(null, null, 0.0, true);
         }
         
         return new Intent(category, subcategoryStr, confidence, uncertain);

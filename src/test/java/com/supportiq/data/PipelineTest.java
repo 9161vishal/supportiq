@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,59 +15,67 @@ public class PipelineTest {
     public void testAmazonHelpPipeline() throws Exception {
         Path tempDir = Files.createTempDirectory("pipeline-test");
         Path tempCsv = tempDir.resolve("test_twcs.csv");
-        
+
         // Construct a synthetic CSV testing all required scenarios.
-        // Format: tweet_id,author_id,inbound,created_at,text,response_tweet_id,in_response_to_tweet_id
-        
+        // Format:
+        // tweet_id,author_id,inbound,created_at,text,response_tweet_id,in_response_to_tweet_id
+
         String csvContent = "tweet_id,author_id,inbound,created_at,text,response_tweet_id,in_response_to_tweet_id\n"
-            // Scenario 1: Direct AmazonHelp response (1 -> 2)
-            + "1,CustomerA,True,1,Hello Amazon,, \n"
-            + "2,AmazonHelp,False,2,Hi there!,3,1\n"
-            
-            // Scenario 2: Multi-turn (1 -> 2 -> 3 -> 4)
-            + "3,CustomerA,True,3,My package is late.,4,2\n"
-            + "4,AmazonHelp,False,4,Let me check.,,3\n"
-            
-            // Scenario 3: Unrelated support company branch (1 -> 5)
-            + "5,AppleSupport,False,5,Are you talking to us?,,1\n" // This branch should be ignored
-            
-            // Scenario 4: Branching interaction (2 -> 6)
-            + "6,CustomerB,True,6,I have a similar issue.,7,2\n"
-            + "7,AmazonHelp,False,7,DM us.,,6\n"
-            
-            // Scenario 5: Sibling of AmazonHelp (1 -> 8), not part of AH interaction
-            + "8,CustomerC,True,8,Me too.,,1\n"
-            
-            // Scenario 6: Missing parent (9 -> 10, but 9 is missing)
-            + "10,AmazonHelp,False,10,We can help with that.,,9\n"
-            
-            // Scenario 7: Cycle protection (11 -> 12 -> 11)
-            + "11,CustomerD,True,11,Cycle start,,12\n"
-            + "12,AmazonHelp,False,12,Cycle end,,11\n"
-            
-            // Scenario 8: Missing response (13 has response 14, but 14 is missing)
-            + "13,AmazonHelp,False,13,Response missing,14, \n"
-            
-            // Scenario 9: Ancestor is other company (15 -> 16 -> 17)
-            + "15,CustomerE,True,15,Hello Apple,, \n"
-            + "16,AppleSupport,False,16,Hi!,17,15\n"
-            + "17,AmazonHelp,False,17,We can help too.,,16\n";
+                // Scenario 1: Direct AmazonHelp response (1 -> 2)
+                + "1,CustomerA,True,1,Hello Amazon,, \n"
+                + "2,AmazonHelp,False,2,Hi there!,3,1\n"
+
+                // Scenario 2: Multi-turn (1 -> 2 -> 3 -> 4)
+                + "3,CustomerA,True,3,My package is late.,4,2\n"
+                + "4,AmazonHelp,False,4,Let me check.,,3\n"
+
+                // Scenario 3: Unrelated support company branch (1 -> 5)
+                + "5,AppleSupport,False,5,Are you talking to us?,,1\n" // This branch should be ignored
+
+                // Scenario 4: Branching interaction (2 -> 6)
+                + "6,CustomerB,True,6,I have a similar issue.,7,2\n"
+                + "7,AmazonHelp,False,7,DM us.,,6\n"
+
+                // Scenario 5: Sibling of AmazonHelp (1 -> 8), not part of AH interaction
+                + "8,CustomerC,True,8,Me too.,,1\n"
+
+                // Scenario 6: Missing parent (9 -> 10, but 9 is missing)
+                + "10,AmazonHelp,False,10,We can help with that.,,9\n"
+
+                // Scenario 7: Cycle protection (11 -> 12 -> 11)
+                + "11,CustomerD,True,11,Cycle start,,12\n"
+                + "12,AmazonHelp,False,12,Cycle end,,11\n"
+
+                // Scenario 8: Missing response (13 has response 14, but 14 is missing)
+                + "13,AmazonHelp,False,13,Response missing,14, \n"
+
+                // Scenario 9: Ancestor is other company (15 -> 16 -> 17 -> 18)
+                + "15,CustomerE,True,15,Hello Apple,, \n"
+                + "16,AppleSupport,False,16,Hi!,17,15\n"
+                + "17,AmazonHelp,False,17,We can help too.,18,16\n"
+                + "18,CustomerE,True,18,Thanks.,,17\n";
 
         Files.writeString(tempCsv, csvContent);
-        
-        AmazonHelpPipeline pipeline = new AmazonHelpPipeline(tempCsv, tempDir.toString());
+
+        String outputDir = tempDir.toAbsolutePath().toString();
+        String workingCsv = tempDir.resolve("amazonhelp_relevant_tweets.csv").toAbsolutePath().toString();
+        AmazonHelpPipeline pipeline = new AmazonHelpPipeline(tempCsv, outputDir, workingCsv);
         pipeline.process();
-        
+
         Path outputFile = tempDir.resolve("intermediate_paths.jsonl");
         assertTrue(Files.exists(outputFile), "Output file should be created");
-        
+
         List<String> lines = Files.readAllLines(outputFile);
-        
+        System.out.println("DEBUG intermediate_paths.jsonl:");
+        for(String line : lines) {
+            System.out.println(line);
+        }
+
         // Output should not contain text
         for (String line : lines) {
             assertFalse(line.contains("Hello Amazon"), "Output must not contain tweet text");
         }
-        
+
         // Check paths for root 1
         // Expected paths from 1:
         // [1, 2, 3, 4]
@@ -84,7 +93,7 @@ public class PipelineTest {
         }
         assertTrue(foundMultiTurn, "Multi-turn path must be found");
         assertTrue(foundBranch, "Branching path must be found");
-        
+
         // Check missing parent scenario
         boolean foundMissingParent = false;
         for (String line : lines) {
@@ -93,23 +102,25 @@ public class PipelineTest {
             }
         }
         assertTrue(foundMissingParent, "Missing parent root must be processed");
-        
+
         // Check cycle (isolated cycles have no root and are dropped)
         boolean foundCycle = false;
         for (String line : lines) {
-            if (line.contains("\"rootTweetId\":\"11\"") || line.contains("\"rootTweetId\":\"12\"") || line.contains("\"rootTweetId\":\"99\"")) {
+            if (line.contains("\"rootTweetId\":\"11\"") || line.contains("\"rootTweetId\":\"12\"")
+                    || line.contains("\"rootTweetId\":\"99\"")) {
                 foundCycle = true;
             }
         }
         assertFalse(foundCycle, "Isolated cycle must be safely ignored");
-        
+
         // Check other company ancestor scenario
         boolean foundExcludedAncestor = false;
         for (String line : lines) {
             if (line.contains("\"rootTweetId\":\"17\"")) {
-                foundExcludedAncestor = line.contains("[\"17\"]");
+                foundExcludedAncestor = line.contains("[\"17\",\"18\"]");
             }
-            assertFalse(line.contains("\"15\"") || line.contains("\"16\""), "Must exclude AppleSupport ancestor branch");
+            assertFalse(line.contains("\"15\"") || line.contains("\"16\""),
+                    "Must exclude AppleSupport ancestor branch");
         }
         assertTrue(foundExcludedAncestor, "AmazonHelp tweet with other company ancestor must be isolated");
     }

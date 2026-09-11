@@ -1,0 +1,431 @@
+{
+  "total_buckets" : 83,
+  "total_mapped_candidates" : 12351,
+  "total_valid_retrievable" : 12351,
+  "total_invalid_rejected" : 0,
+  "failures" : {
+    "unresolved_ids" : 0,
+    "duplicate_paths" : 0,
+    "relationship_failures" : 0,
+    "cross_company_contamination" : 0
+  },
+  "execution_time_ms" : 47831,
+  "coverage_reconciled" : true,
+  "buckets" : {
+    "ACCOUNT_AND_LOGIN->ACCOUNT_LOCKED" : {
+      "mapped" : 99,
+      "retrieved" : 99,
+      "retrieval_ms" : 247.3162
+    },
+    "ACCOUNT_AND_LOGIN->CANNOT_LOGIN" : {
+      "mapped" : 54,
+      "retrieved" : 54,
+      "retrieval_ms" : 87.5047
+    },
+    "ACCOUNT_AND_LOGIN->EMAIL_OR_PHONE_CHANGE" : {
+      "mapped" : 736,
+      "retrieved" : 736,
+      "retrieval_ms" : 1110.6643
+    },
+    "ACCOUNT_AND_LOGIN->PASSWORD_PROBLEM" : {
+      "mapped" : 82,
+      "retrieved" : 82,
+      "retrieval_ms" : 113.1294
+    },
+    "ADDRESS_AND_DELIVERY_PREFERENCES->ADDRESS_PROBLEM_OR_CHANGE" : {
+      "mapped" : 77,
+      "retrieved" : 77,
+      "retrieval_ms" : 95.1323
+    },
+    "ADDRESS_AND_DELIVERY_PREFERENCES->ADD_OR_REMOVE_ADDRESS" : {
+      "mapped" : 10,
+      "retrieved" : 10,
+      "retrieval_ms" : 24.0397
+    },
+    "ADDRESS_AND_DELIVERY_PREFERENCES->DELIVERY_LOCATION_OR_SAFE_PLACE" : {
+      "mapped" : 32,
+      "retrieved" : 32,
+      "retrieval_ms" : 35.8017
+    },
+    "ADDRESS_AND_DELIVERY_PREFERENCES->DELIVERY_PREFERENCE" : {
+      "mapped" : 7,
+      "retrieved" : 7,
+      "retrieval_ms" : 7.6278
+    },
+    "ADDRESS_AND_DELIVERY_PREFERENCES->WRONG_DELIVERY_ADDRESS" : {
+      "mapped" : 1,
+      "retrieved" : 1,
+      "retrieval_ms" : 0.864
+    },
+    "AMAZON_DEVICES->ALEXA_PROBLEM" : {
+      "mapped" : 336,
+      "retrieved" : 336,
+      "retrieval_ms" : 360.9231
+    },
+    "AMAZON_DEVICES->ECHO_PROBLEM" : {
+      "mapped" : 501,
+      "retrieved" : 501,
+      "retrieval_ms" : 603.9784
+    },
+    "AMAZON_DEVICES->FIRE_TV_OR_FIRE_TV_STICK_PROBLEM" : {
+      "mapped" : 264,
+      "retrieved" : 264,
+      "retrieval_ms" : 376.506
+    },
+    "AMAZON_PAY->AMAZON_PAY_BALANCE" : {
+      "mapped" : 1,
+      "retrieved" : 1,
+      "retrieval_ms" : 1.2668
+    },
+    "AMAZON_PAY->AMAZON_PAY_CASHBACK_OR_REWARDS" : {
+      "mapped" : 46,
+      "retrieved" : 46,
+      "retrieval_ms" : 124.4808
+    },
+    "AMAZON_PAY->AMAZON_PAY_PAYMENT_OR_TRANSACTION" : {
+      "mapped" : 6,
+      "retrieved" : 6,
+      "retrieval_ms" : 11.6294
+    },
+    "CUSTOMER_SERVICE_EXPERIENCE->GENERAL_SERVICE_COMPLAINT" : {
+      "mapped" : 646,
+      "retrieved" : 646,
+      "retrieval_ms" : 1360.3134
+    },
+    "CUSTOMER_SERVICE_EXPERIENCE->NO_OR_DELAYED_RESPONSE" : {
+      "mapped" : 27,
+      "retrieved" : 27,
+      "retrieval_ms" : 59.3027
+    },
+    "CUSTOMER_SERVICE_EXPERIENCE->POOR_CUSTOMER_SERVICE" : {
+      "mapped" : 94,
+      "retrieved" : 94,
+      "retrieval_ms" : 260.8063
+    },
+    "CUSTOMER_SERVICE_EXPERIENCE->PRAISE_OR_APPRECIATION" : {
+      "mapped" : 73,
+      "retrieved" : 73,
+      "retrieval_ms" : 109.2165
+    },
+    "CUSTOMER_SERVICE_EXPERIENCE->REPEATED_CONTACT" : {
+      "mapped" : 49,
+      "retrieved" : 49,
+      "retrieval_ms" : 103.0789
+    },
+    "CUSTOMER_SERVICE_EXPERIENCE->UNRESOLVED_ISSUE" : {
+      "mapped" : 41,
+      "retrieved" : 41,
+      "retrieval_ms" : 195.8542
+    },
+    "DELIVERY_AND_TRACKING->COURIER_OR_DRIVER_PROBLEM" : {
+      "mapped" : 84,
+      "retrieved" : 84,
+      "retrieval_ms" : 138.6239
+    },
+    "DELIVERY_AND_TRACKING->DELIVERY_ATTEMPT_FAILED" : {
+      "mapped" : 40,
+      "retrieved" : 40,
+      "retrieval_ms" : 486.6187
+    },
+    "DELIVERY_AND_TRACKING->DELIVERY_DATE" : {
+      "mapped" : 553,
+      "retrieved" : 553,
+      "retrieval_ms" : 951.7187
+    },
+    "DELIVERY_AND_TRACKING->DELIVERY_LATE" : {
+      "mapped" : 786,
+      "retrieved" : 786,
+      "retrieval_ms" : 1376.091
+    },
+    "DELIVERY_AND_TRACKING->PACKAGE_MARKED_DELIVERED" : {
+      "mapped" : 134,
+      "retrieved" : 134,
+      "retrieval_ms" : 264.3648
+    },
+    "DELIVERY_AND_TRACKING->TRACKING_NOT_UPDATED" : {
+      "mapped" : 468,
+      "retrieved" : 468,
+      "retrieval_ms" : 1143.0258
+    },
+    "GENERAL_INFORMATION_AND_NON_SUPPORT->PRAISE_OR_APPRECIATION" : {
+      "mapped" : 719,
+      "retrieved" : 719,
+      "retrieval_ms" : 1825.4017
+    },
+    "GIFT_CARDS->GIFT_CARD_BALANCE" : {
+      "mapped" : 97,
+      "retrieved" : 97,
+      "retrieval_ms" : 173.2428
+    },
+    "GIFT_CARDS->GIFT_CARD_NOT_RECEIVED" : {
+      "mapped" : 2,
+      "retrieved" : 2,
+      "retrieval_ms" : 1.9837
+    },
+    "GIFT_CARDS->GIFT_CARD_NOT_WORKING" : {
+      "mapped" : 6,
+      "retrieved" : 6,
+      "retrieval_ms" : 8.5414
+    },
+    "GIFT_CARDS->GIFT_CARD_PURCHASE" : {
+      "mapped" : 21,
+      "retrieved" : 21,
+      "retrieval_ms" : 40.8618
+    },
+    "GIFT_CARDS->GIFT_CARD_REDEMPTION" : {
+      "mapped" : 15,
+      "retrieved" : 15,
+      "retrieval_ms" : 20.5281
+    },
+    "KINDLE_AND_READING->KINDLE_BOOK_ACCESS" : {
+      "mapped" : 96,
+      "retrieved" : 96,
+      "retrieval_ms" : 143.5528
+    },
+    "KINDLE_AND_READING->KINDLE_OR_EBOOK_ISSUE" : {
+      "mapped" : 453,
+      "retrieved" : 453,
+      "retrieval_ms" : 2915.9069
+    },
+    "KINDLE_AND_READING->KINDLE_OR_READING_GENERAL" : {
+      "mapped" : 665,
+      "retrieved" : 665,
+      "retrieval_ms" : 836.8745
+    },
+    "MARKETPLACE_AND_SELLERS->THIRD_PARTY_SELLER_PROBLEM" : {
+      "mapped" : 365,
+      "retrieved" : 365,
+      "retrieval_ms" : 684.6905
+    },
+    "ORDER_MANAGEMENT->CHANGE_ORDER" : {
+      "mapped" : 334,
+      "retrieved" : 334,
+      "retrieval_ms" : 626.5774
+    },
+    "PAYMENT_AND_BILLING->CARD_CHARGED" : {
+      "mapped" : 2,
+      "retrieved" : 2,
+      "retrieval_ms" : 1.9434
+    },
+    "PAYMENT_AND_BILLING->CHARGE_OR_BILLING_PROBLEM" : {
+      "mapped" : 124,
+      "retrieved" : 124,
+      "retrieval_ms" : 191.4716
+    },
+    "PAYMENT_AND_BILLING->PAYMENT_DECLINED" : {
+      "mapped" : 6,
+      "retrieved" : 6,
+      "retrieval_ms" : 8.702
+    },
+    "PAYMENT_AND_BILLING->PAYMENT_FAILED" : {
+      "mapped" : 5,
+      "retrieved" : 5,
+      "retrieval_ms" : 5.5688
+    },
+    "PAYMENT_AND_BILLING->PAYMENT_VERIFICATION" : {
+      "mapped" : 17,
+      "retrieved" : 17,
+      "retrieval_ms" : 23.0316
+    },
+    "PAYMENT_AND_BILLING->UNEXPECTED_CHARGE" : {
+      "mapped" : 9,
+      "retrieved" : 9,
+      "retrieval_ms" : 21.5693
+    },
+    "PRIME_MEMBERSHIP->CANCEL_PRIME" : {
+      "mapped" : 13,
+      "retrieved" : 13,
+      "retrieval_ms" : 14.4515
+    },
+    "PRIME_MEMBERSHIP->PRIME_DELIVERY_BENEFIT" : {
+      "mapped" : 49,
+      "retrieved" : 49,
+      "retrieval_ms" : 81.1777
+    },
+    "PRIME_MEMBERSHIP->PRIME_MEMBERSHIP_CHARGE" : {
+      "mapped" : 8,
+      "retrieved" : 8,
+      "retrieval_ms" : 16.835
+    },
+    "PRIME_MEMBERSHIP->PRIME_MEMBERSHIP_OR_BENEFITS" : {
+      "mapped" : 4,
+      "retrieved" : 4,
+      "retrieval_ms" : 15.3422
+    },
+    "PRIME_MEMBERSHIP->PRIME_RENEWAL" : {
+      "mapped" : 31,
+      "retrieved" : 31,
+      "retrieval_ms" : 39.3156
+    },
+    "PRIME_MEMBERSHIP->PRIME_TRIAL" : {
+      "mapped" : 28,
+      "retrieved" : 28,
+      "retrieval_ms" : 41.6984
+    },
+    "PRIME_VIDEO_AND_DIGITAL_CONTENT->CONTENT_AVAILABILITY" : {
+      "mapped" : 3,
+      "retrieved" : 3,
+      "retrieval_ms" : 17.5853
+    },
+    "PRIME_VIDEO_AND_DIGITAL_CONTENT->DIGITAL_CONTENT_ACCESS" : {
+      "mapped" : 4,
+      "retrieved" : 4,
+      "retrieval_ms" : 7.4568
+    },
+    "PRIME_VIDEO_AND_DIGITAL_CONTENT->DIGITAL_SUBSCRIPTION_PROBLEM" : {
+      "mapped" : 2,
+      "retrieved" : 2,
+      "retrieval_ms" : 1.6854
+    },
+    "PRIME_VIDEO_AND_DIGITAL_CONTENT->MOVIE_OR_SHOW_PURCHASE_OR_RENTAL" : {
+      "mapped" : 49,
+      "retrieved" : 49,
+      "retrieval_ms" : 58.4929
+    },
+    "PRIME_VIDEO_AND_DIGITAL_CONTENT->PLAYBACK_OR_TECHNICAL_PROBLEM" : {
+      "mapped" : 58,
+      "retrieved" : 58,
+      "retrieval_ms" : 104.6971
+    },
+    "PRIME_VIDEO_AND_DIGITAL_CONTENT->PRIME_VIDEO_GENERAL" : {
+      "mapped" : 659,
+      "retrieved" : 659,
+      "retrieval_ms" : 814.4646
+    },
+    "PRIVACY_AND_SECURITY->FRAUD_CONCERN" : {
+      "mapped" : 349,
+      "retrieved" : 349,
+      "retrieval_ms" : 1032.4396
+    },
+    "PRIVACY_AND_SECURITY->PERSONAL_INFORMATION_CONCERN" : {
+      "mapped" : 8,
+      "retrieved" : 8,
+      "retrieval_ms" : 26.5901
+    },
+    "PRIVACY_AND_SECURITY->SUSPICIOUS_ACTIVITY" : {
+      "mapped" : 1,
+      "retrieved" : 1,
+      "retrieval_ms" : 0.8334
+    },
+    "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_AVAILABILITY" : {
+      "mapped" : 818,
+      "retrieved" : 818,
+      "retrieval_ms" : 1370.4765
+    },
+    "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_PRICE_OR_PRICING" : {
+      "mapped" : 314,
+      "retrieved" : 314,
+      "retrieval_ms" : 853.0151
+    },
+    "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_SPECIFICATION" : {
+      "mapped" : 4,
+      "retrieved" : 4,
+      "retrieval_ms" : 8.3733
+    },
+    "PRODUCT_PROBLEM->DAMAGED_PRODUCT" : {
+      "mapped" : 218,
+      "retrieved" : 218,
+      "retrieval_ms" : 313.5378
+    },
+    "PRODUCT_PROBLEM->DEFECTIVE_OR_NOT_WORKING" : {
+      "mapped" : 29,
+      "retrieved" : 29,
+      "retrieval_ms" : 38.0811
+    },
+    "PRODUCT_PROBLEM->MISSING_ITEM_OR_COMPONENT" : {
+      "mapped" : 1,
+      "retrieved" : 1,
+      "retrieval_ms" : 0.885
+    },
+    "PRODUCT_PROBLEM->PRODUCT_QUALITY_PROBLEM" : {
+      "mapped" : 119,
+      "retrieved" : 119,
+      "retrieval_ms" : 215.1657
+    },
+    "PROMOTIONS_AND_DISCOUNTS->CASHBACK_OR_PROMOTIONAL_OFFER" : {
+      "mapped" : 28,
+      "retrieved" : 28,
+      "retrieval_ms" : 41.3443
+    },
+    "PROMOTIONS_AND_DISCOUNTS->COUPON_PROBLEM" : {
+      "mapped" : 8,
+      "retrieved" : 8,
+      "retrieval_ms" : 10.7199
+    },
+    "PROMOTIONS_AND_DISCOUNTS->DISCOUNT_NOT_APPLIED" : {
+      "mapped" : 18,
+      "retrieved" : 18,
+      "retrieval_ms" : 26.6663
+    },
+    "PROMOTIONS_AND_DISCOUNTS->OFFER_ELIGIBILITY" : {
+      "mapped" : 4,
+      "retrieved" : 4,
+      "retrieval_ms" : 11.7301
+    },
+    "PROMOTIONS_AND_DISCOUNTS->PROMOTION_OR_DISCOUNT" : {
+      "mapped" : 89,
+      "retrieved" : 89,
+      "retrieval_ms" : 117.4187
+    },
+    "RETURNS_AND_REFUNDS->REFUND_AFTER_CANCELLATION_OR_RETURN" : {
+      "mapped" : 160,
+      "retrieved" : 160,
+      "retrieval_ms" : 231.865
+    },
+    "RETURNS_AND_REFUNDS->REFUND_AMOUNT" : {
+      "mapped" : 7,
+      "retrieved" : 7,
+      "retrieval_ms" : 13.573
+    },
+    "RETURNS_AND_REFUNDS->REFUND_PENDING" : {
+      "mapped" : 29,
+      "retrieved" : 29,
+      "retrieval_ms" : 66.4363
+    },
+    "RETURNS_AND_REFUNDS->REFUND_REQUEST" : {
+      "mapped" : 146,
+      "retrieved" : 146,
+      "retrieval_ms" : 313.5052
+    },
+    "RETURNS_AND_REFUNDS->RETURN_ELIGIBILITY" : {
+      "mapped" : 5,
+      "retrieved" : 5,
+      "retrieval_ms" : 7.0476
+    },
+    "RETURNS_AND_REFUNDS->RETURN_REQUEST" : {
+      "mapped" : 3,
+      "retrieved" : 3,
+      "retrieval_ms" : 12.0698
+    },
+    "RETURNS_AND_REFUNDS->RETURN_SHIPPING" : {
+      "mapped" : 11,
+      "retrieved" : 11,
+      "retrieval_ms" : 46.7554
+    },
+    "SHIPPING_PACKAGING_AND_LOGISTICS->DAMAGED_PACKAGE" : {
+      "mapped" : 749,
+      "retrieved" : 749,
+      "retrieval_ms" : 1043.5672
+    },
+    "SHIPPING_PACKAGING_AND_LOGISTICS->GENERAL_LOGISTICS_PROBLEM" : {
+      "mapped" : 30,
+      "retrieved" : 30,
+      "retrieval_ms" : 72.3739
+    },
+    "SHIPPING_PACKAGING_AND_LOGISTICS->OPEN_OR_TAMPERED_PACKAGE" : {
+      "mapped" : 16,
+      "retrieved" : 16,
+      "retrieval_ms" : 15.6326
+    },
+    "SHIPPING_PACKAGING_AND_LOGISTICS->PACKAGING_PROBLEM" : {
+      "mapped" : 60,
+      "retrieved" : 60,
+      "retrieval_ms" : 59.7939
+    },
+    "SHIPPING_PACKAGING_AND_LOGISTICS->SHIPPING_CARRIER_PROBLEM" : {
+      "mapped" : 36,
+      "retrieved" : 36,
+      "retrieval_ms" : 44.5195
+    }
+  }
+}
