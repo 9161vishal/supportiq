@@ -1,0 +1,576 @@
+{
+  "ACCOUNT_AND_LOGIN->ACCOUNT_ACCESS_OR_DETAILS" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ACCOUNT_AND_LOGIN->ACCOUNT_LOCKED" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 99,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ACCOUNT_AND_LOGIN->ACCOUNT_VERIFICATION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ACCOUNT_AND_LOGIN->CANNOT_LOGIN" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 54,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ACCOUNT_AND_LOGIN->EMAIL_OR_PHONE_CHANGE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 736,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ACCOUNT_AND_LOGIN->HACKED_OR_COMPROMISED_ACCOUNT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ACCOUNT_AND_LOGIN->PASSWORD_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 82,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ADDRESS_AND_DELIVERY_PREFERENCES->ADDRESS_PROBLEM_OR_CHANGE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 77,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ADDRESS_AND_DELIVERY_PREFERENCES->ADD_OR_REMOVE_ADDRESS" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 10,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ADDRESS_AND_DELIVERY_PREFERENCES->DELIVERY_LOCATION_OR_SAFE_PLACE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 32,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ADDRESS_AND_DELIVERY_PREFERENCES->DELIVERY_PREFERENCE" : {
+    "count" : 7,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "ADDRESS_AND_DELIVERY_PREFERENCES->WRONG_DELIVERY_ADDRESS" : {
+    "count" : 1,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "AMAZON_DEVICES->ALEXA_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 336,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "AMAZON_DEVICES->DEVICE_CONNECTIVITY" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "AMAZON_DEVICES->DEVICE_NOT_WORKING" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "AMAZON_DEVICES->DEVICE_SETUP" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "AMAZON_DEVICES->ECHO_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 501,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "AMAZON_DEVICES->FIRE_TV_OR_FIRE_TV_STICK_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 264,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "AMAZON_DEVICES->GENERAL_DEVICE_QUESTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "AMAZON_PAY->AMAZON_PAY_ACCOUNT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "AMAZON_PAY->AMAZON_PAY_BALANCE" : {
+    "count" : 1,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "AMAZON_PAY->AMAZON_PAY_CASHBACK_OR_REWARDS" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 46,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "AMAZON_PAY->AMAZON_PAY_FRAUD_OR_SUSPICIOUS_TRANSACTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "AMAZON_PAY->AMAZON_PAY_PAYMENT_OR_TRANSACTION" : {
+    "count" : 6,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "AMAZON_PAY->AMAZON_PAY_REFUND" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "CUSTOMER_SERVICE_EXPERIENCE->GENERAL_SERVICE_COMPLAINT" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 646,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "CUSTOMER_SERVICE_EXPERIENCE->NO_OR_DELAYED_RESPONSE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 27,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "CUSTOMER_SERVICE_EXPERIENCE->POOR_CUSTOMER_SERVICE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 94,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "CUSTOMER_SERVICE_EXPERIENCE->PRAISE_OR_APPRECIATION" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 73,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "CUSTOMER_SERVICE_EXPERIENCE->REPEATED_CONTACT" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 49,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "CUSTOMER_SERVICE_EXPERIENCE->UNRESOLVED_ISSUE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 41,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "DELIVERY_AND_TRACKING->COURIER_OR_DRIVER_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 84,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "DELIVERY_AND_TRACKING->DELIVERY_ATTEMPT_FAILED" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 40,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "DELIVERY_AND_TRACKING->DELIVERY_DATE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 553,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "DELIVERY_AND_TRACKING->DELIVERY_LATE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 786,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "DELIVERY_AND_TRACKING->GENERAL_DELIVERY_QUESTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "DELIVERY_AND_TRACKING->PACKAGE_MARKED_DELIVERED" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 134,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "DELIVERY_AND_TRACKING->TRACKING_NOT_UPDATED" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 468,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->FEEDBACK" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->GENERAL_AMAZON_QUESTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->GENERAL_COMPLAINT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->GENERAL_INFORMATION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->OTHER_NON_ACTIONABLE_MESSAGE" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->PRAISE_OR_APPRECIATION" : {
+    "count" : 719,
+    "status" : "REVIEW_REQUIRED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->SOCIAL_OR_CONVERSATIONAL" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GENERAL_INFORMATION_AND_NON_SUPPORT->UNKNOWN" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GIFT_CARDS->GIFT_CARD_BALANCE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 97,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "GIFT_CARDS->GIFT_CARD_CHARGE_OR_PAYMENT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "GIFT_CARDS->GIFT_CARD_NOT_RECEIVED" : {
+    "count" : 2,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "GIFT_CARDS->GIFT_CARD_NOT_WORKING" : {
+    "count" : 6,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "GIFT_CARDS->GIFT_CARD_PURCHASE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 21,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "GIFT_CARDS->GIFT_CARD_REDEMPTION" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 15,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "KINDLE_AND_READING->KINDLE_BOOK_ACCESS" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 96,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "KINDLE_AND_READING->KINDLE_BOOK_DOWNLOAD" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "KINDLE_AND_READING->KINDLE_BOOK_PURCHASE_OR_PRICING" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "KINDLE_AND_READING->KINDLE_DEVICE_PROBLEM" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "KINDLE_AND_READING->KINDLE_OR_EBOOK_ISSUE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 453,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "KINDLE_AND_READING->KINDLE_OR_READING_GENERAL" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 665,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "MARKETPLACE_AND_SELLERS->SELLER_ACCOUNT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "MARKETPLACE_AND_SELLERS->SELLER_COMMUNICATION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "MARKETPLACE_AND_SELLERS->SELLER_FRAUD_OR_COUNTERFEIT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "MARKETPLACE_AND_SELLERS->SELLER_ORDER_OR_DELIVERY" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "MARKETPLACE_AND_SELLERS->SELLER_RETURN_OR_REFUND" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "MARKETPLACE_AND_SELLERS->THIRD_PARTY_SELLER_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 365,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ORDER_MANAGEMENT->CANCEL_ORDER" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ORDER_MANAGEMENT->CHANGE_ORDER" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 334,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "ORDER_MANAGEMENT->DUPLICATE_ORDER" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ORDER_MANAGEMENT->GENERAL_ORDER_QUESTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ORDER_MANAGEMENT->ORDER_CONFIRMATION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ORDER_MANAGEMENT->ORDER_STATUS" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ORDER_MANAGEMENT->PLACE_ORDER" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "ORDER_MANAGEMENT->PRE_ORDER" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PAYMENT_AND_BILLING->CARD_CHARGED" : {
+    "count" : 2,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PAYMENT_AND_BILLING->CHARGE_OR_BILLING_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 124,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PAYMENT_AND_BILLING->GENERAL_PAYMENT_PROBLEM" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PAYMENT_AND_BILLING->PAYMENT_DECLINED" : {
+    "count" : 6,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PAYMENT_AND_BILLING->PAYMENT_FAILED" : {
+    "count" : 5,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PAYMENT_AND_BILLING->PAYMENT_VERIFICATION" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 17,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PAYMENT_AND_BILLING->UNEXPECTED_CHARGE" : {
+    "count" : 9,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIME_MEMBERSHIP->CANCEL_PRIME" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 13,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIME_MEMBERSHIP->GENERAL_PRIME_QUESTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRIME_MEMBERSHIP->PRIME_DELIVERY_BENEFIT" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 49,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIME_MEMBERSHIP->PRIME_MEMBERSHIP_CHARGE" : {
+    "count" : 8,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIME_MEMBERSHIP->PRIME_MEMBERSHIP_OR_BENEFITS" : {
+    "count" : 4,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIME_MEMBERSHIP->PRIME_RENEWAL" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 31,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIME_MEMBERSHIP->PRIME_TRIAL" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 28,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIME_VIDEO_AND_DIGITAL_CONTENT->CONTENT_AVAILABILITY" : {
+    "count" : 3,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIME_VIDEO_AND_DIGITAL_CONTENT->DIGITAL_CONTENT_ACCESS" : {
+    "count" : 4,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIME_VIDEO_AND_DIGITAL_CONTENT->DIGITAL_SUBSCRIPTION_PROBLEM" : {
+    "count" : 2,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIME_VIDEO_AND_DIGITAL_CONTENT->MOVIE_OR_SHOW_PURCHASE_OR_RENTAL" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 49,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIME_VIDEO_AND_DIGITAL_CONTENT->PLAYBACK_OR_TECHNICAL_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 58,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIME_VIDEO_AND_DIGITAL_CONTENT->PRIME_VIDEO_GENERAL" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 659,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIVACY_AND_SECURITY->ACCOUNT_SECURITY" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRIVACY_AND_SECURITY->FRAUD_CONCERN" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 349,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRIVACY_AND_SECURITY->PERSONAL_INFORMATION_CONCERN" : {
+    "count" : 8,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIVACY_AND_SECURITY->SECURITY_OR_VERIFICATION_PROBLEM" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRIVACY_AND_SECURITY->SUSPICIOUS_ACTIVITY" : {
+    "count" : 1,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRIVACY_AND_SECURITY->UNAUTHORIZED_ACCESS" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRODUCT_INFORMATION_AND_PRICING->GENERAL_PRODUCT_QUESTION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRODUCT_INFORMATION_AND_PRICING->PRICE_DIFFERENCE_OR_PRICE_CHANGE" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_AVAILABILITY" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 818,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_INFORMATION" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_PRICE_OR_PRICING" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 314,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRODUCT_INFORMATION_AND_PRICING->PRODUCT_SPECIFICATION" : {
+    "count" : 4,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRODUCT_PROBLEM->DAMAGED_PRODUCT" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 218,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRODUCT_PROBLEM->DEFECTIVE_OR_NOT_WORKING" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 29,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRODUCT_PROBLEM->MISSING_ITEM_OR_COMPONENT" : {
+    "count" : 1,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PRODUCT_PROBLEM->OTHER_PRODUCT_PROBLEM" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRODUCT_PROBLEM->PRODUCT_QUALITY_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 119,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PRODUCT_PROBLEM->REPLACEMENT_REQUEST" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PRODUCT_PROBLEM->WRONG_PRODUCT" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "PROMOTIONS_AND_DISCOUNTS->CASHBACK_OR_PROMOTIONAL_OFFER" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 28,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PROMOTIONS_AND_DISCOUNTS->COUPON_PROBLEM" : {
+    "count" : 8,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PROMOTIONS_AND_DISCOUNTS->DISCOUNT_NOT_APPLIED" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 18,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "PROMOTIONS_AND_DISCOUNTS->OFFER_ELIGIBILITY" : {
+    "count" : 4,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "PROMOTIONS_AND_DISCOUNTS->PROMOTION_OR_DISCOUNT" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 89,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->REFUND_AFTER_CANCELLATION_OR_RETURN" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 160,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->REFUND_AMOUNT" : {
+    "count" : 7,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->REFUND_PENDING" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 29,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->REFUND_REQUEST" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 146,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->RETURN_ELIGIBILITY" : {
+    "count" : 5,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->RETURN_REQUEST" : {
+    "count" : 3,
+    "status" : "INSUFFICIENT_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->RETURN_SHIPPING" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 11,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "RETURNS_AND_REFUNDS->RETURN_STATUS" : {
+    "count" : 0,
+    "status" : "UNMAPPED"
+  },
+  "SHIPPING_PACKAGING_AND_LOGISTICS->DAMAGED_PACKAGE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 749,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "SHIPPING_PACKAGING_AND_LOGISTICS->GENERAL_LOGISTICS_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 30,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "SHIPPING_PACKAGING_AND_LOGISTICS->OPEN_OR_TAMPERED_PACKAGE" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 16,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "SHIPPING_PACKAGING_AND_LOGISTICS->PACKAGING_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 60,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  },
+  "SHIPPING_PACKAGING_AND_LOGISTICS->SHIPPING_CARRIER_PROBLEM" : {
+    "note" : "Requires semantic review before final golden promotion.",
+    "count" : 36,
+    "status" : "SUPPORTED_BY_EVIDENCE"
+  }
+}

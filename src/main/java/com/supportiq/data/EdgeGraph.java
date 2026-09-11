@@ -102,13 +102,14 @@ class EdgeGraph {
 
     private void quickSort(long[] keys, long[] values, int left, int right) {
         if (left >= right) return;
-        long pivot = keys[left + (right - left) / 2];
+        long pivotKey = keys[left + (right - left) / 2];
+        long pivotVal = values[left + (right - left) / 2];
         int i = left;
         int j = right;
         
         while (i <= j) {
-            while (keys[i] < pivot) i++;
-            while (keys[j] > pivot) j--;
+            while (keys[i] < pivotKey || (keys[i] == pivotKey && values[i] < pivotVal)) i++;
+            while (keys[j] > pivotKey || (keys[j] == pivotKey && values[j] > pivotVal)) j--;
             if (i <= j) {
                 long tempKey = keys[i];
                 keys[i] = keys[j];

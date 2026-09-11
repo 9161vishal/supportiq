@@ -2,7 +2,7 @@ package com.supportiq.data;
 
 import com.supportiq.model.CustomerMessage;
 import com.supportiq.model.Intent;
-import com.supportiq.service.LlmIntentClassifier;
+import com.supportiq.service.IntentClassifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ public class HistoricalMappingPreparerTest {
 
     private Path tempInputJsonl;
     private Path tempOutputDir;
-    private LlmIntentClassifier mockClassifier;
+    private IntentClassifier mockClassifier;
     private CsvOffsetReader mockReader;
     private TweetOffsetIndex mockIndex;
 
@@ -41,7 +41,7 @@ public class HistoricalMappingPreparerTest {
 
         tempOutputDir = Files.createTempDirectory("test_output");
         
-        mockClassifier = mock(LlmIntentClassifier.class);
+        mockClassifier = mock(IntentClassifier.class);
         mockReader = mock(CsvOffsetReader.class);
         mockIndex = mock(TweetOffsetIndex.class);
 
@@ -119,7 +119,7 @@ public class HistoricalMappingPreparerTest {
         assertTrue(auditLines.get(2).contains("200"));
         assertTrue(auditLines.get(2).contains("true")); // uncertain
         
-        // Check actual mappings (now in staging directory)
+        // Check actual mappings (now in staging directory because limit != -1)
         File stagingDir = new File(tempOutputDir.toFile().getParentFile(), "validation-staging/" + tempOutputDir.toFile().getName());
         
         File delDir = new File(stagingDir, "DELIVERY_AND_TRACKING/DELIVERY_LATE/mapping.jsonl");
@@ -143,6 +143,31 @@ public class HistoricalMappingPreparerTest {
         List<String> uncertainLines = Files.readAllLines(uncertainFile.toPath());
         assertEquals(1, uncertainLines.size());
         assertTrue(uncertainLines.get(0).contains("200"));
+        
+        // Check mapping_audit.json exists
+        File auditJson = new File(tempOutputDir.toFile(), "mapping_audit.json");
+        assertTrue(auditJson.exists());
+    }
+    
+    @Test
+    void testUnmappedLogging() throws Exception {
+        when(mockClassifier.classify(any(CustomerMessage.class)))
+            .thenReturn(null);
+            
+        HistoricalMappingPreparer.runValidation(
+                tempInputJsonl.toString(),
+                tempOutputDir.toString(),
+                1,
+                mockClassifier,
+                mockReader,
+                mockIndex
+        );
+
+        File unmappedFile = new File(tempOutputDir.toFile(), "audit_unmapped.jsonl");
+        assertTrue(unmappedFile.exists());
+        List<String> unmappedLines = Files.readAllLines(unmappedFile.toPath());
+        assertEquals(1, unmappedLines.size());
+        assertTrue(unmappedLines.get(0).contains("100"));
     }
     
     @Test

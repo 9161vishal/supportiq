@@ -13,7 +13,7 @@ public class RunPipeline {
         System.out.println("CSV Path: " + csvPath);
         System.out.println("Output Dir: " + outputDir);
         
-        AmazonHelpPipeline pipeline = new AmazonHelpPipeline(csvPath, outputDir);
+        AmazonHelpPipeline pipeline = new AmazonHelpPipeline(csvPath, outputDir, "data/working/AmazonHelp/amazonhelp_relevant_tweets.csv");
         pipeline.process();
     }
 }

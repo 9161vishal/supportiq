@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supportiq.model.CustomerMessage;
 import com.supportiq.model.Intent;
+import com.supportiq.service.IntentClassifier;
 import com.supportiq.service.LlmIntentClassifier;
 
 import java.io.BufferedReader;
@@ -113,21 +114,39 @@ public class HistoricalMappingPreparer {
     }
     
     public static void runValidation(String inputPath, String outputBaseDir, int limit, 
-                                     LlmIntentClassifier classifier, 
+                                     IntentClassifier classifier, 
                                      CsvOffsetReader csvReader, TweetOffsetIndex offsetIndex) {
         
         File baseFile = new File(outputBaseDir);
-        File stagingDirFile = new File(baseFile.getParentFile(), "validation-staging/" + baseFile.getName());
         
-        // Task 7: Rerun Safety - clear the staging directory before starting to prevent duplication
+        // If limit is -1 (full run), write directly to production, else use staging
+        boolean isFullRun = (limit == -1);
+        File stagingDirFile = isFullRun ? baseFile : new File(baseFile.getParentFile(), "validation-staging/" + baseFile.getName());
+        
+        // Task 7: Rerun Safety - clear the target directory before starting to prevent duplication
         if (stagingDirFile.exists()) {
             try {
-                java.nio.file.Files.walk(stagingDirFile.toPath())
-                     .sorted(java.util.Comparator.reverseOrder())
-                     .map(java.nio.file.Path::toFile)
-                     .forEach(File::delete);
+                // Do NOT delete the entire directory if it's the base directory (it contains intermediate_paths.jsonl)
+                // Just delete taxonomy subdirectories (where mapping.jsonl lives) and audit files
+                java.nio.file.Files.list(stagingDirFile.toPath()).forEach(p -> {
+                    File f = p.toFile();
+                    if (f.isDirectory() || f.getName().startsWith("audit_") || f.getName().equals("mapping_audit.json") || f.getName().equals("validation_sample.csv")) {
+                        try {
+                            if (f.isDirectory()) {
+                                java.nio.file.Files.walk(f.toPath())
+                                    .sorted(java.util.Comparator.reverseOrder())
+                                    .map(java.nio.file.Path::toFile)
+                                    .forEach(File::delete);
+                            } else {
+                                f.delete();
+                            }
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
+                });
             } catch (IOException e) {
-                System.err.println("Failed to clean staging directory: " + e.getMessage());
+                System.err.println("Failed to clean target directory: " + e.getMessage());
             }
         }
         
@@ -137,9 +156,11 @@ public class HistoricalMappingPreparer {
         int interactionsSelected = 0;
         int successfulClassifications = 0;
         int uncertainClassifications = 0;
+        int unmappedClassifications = 0;
         int invalidClassifications = 0;
         int apiFailures = 0;
         int skippedInteractions = 0;
+        int duplicatePaths = 0;
         
         java.util.Set<Long> processedRootIds = new java.util.HashSet<>();
         
@@ -153,6 +174,7 @@ public class HistoricalMappingPreparer {
         try (BufferedReader br = new BufferedReader(new FileReader(inputPath));
              BufferedWriter auditWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "validation_sample.csv")));
              BufferedWriter uncertainWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_uncertain.jsonl")));
+             BufferedWriter unmappedWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_unmapped.jsonl")));
              BufferedWriter invalidWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_invalid.jsonl")));
              BufferedWriter apiFailureWriter = new BufferedWriter(new FileWriter(new File(outputBaseDir, "audit_api_failure.jsonl")))) {
             
@@ -161,7 +183,7 @@ public class HistoricalMappingPreparer {
             
             String line;
             while ((line = br.readLine()) != null) {
-                if (interactionsSelected >= limit) break;
+                if (limit != -1 && interactionsSelected >= limit) break;
                 if (line.trim().isEmpty()) continue;
                 
                 interactionsSelected++;
@@ -188,6 +210,7 @@ public class HistoricalMappingPreparer {
                 
                 if (!processedRootIds.add(rootId)) {
                     // Duplicate protection
+                    duplicatePaths++;
                     continue;
                 }
                 
@@ -238,7 +261,13 @@ public class HistoricalMappingPreparer {
                     pSub = "API_FAILURE";
                     apiFailureWriter.write(line);
                     apiFailureWriter.newLine();
-                } else if (intent != null) {
+                } else if (intent == null) {
+                    pCat = "UNMAPPED";
+                    pSub = "UNMAPPED";
+                    unmappedClassifications++;
+                    unmappedWriter.write(line);
+                    unmappedWriter.newLine();
+                } else {
                     pCat = intent.getCategory().name();
                     pSub = intent.getSubCategory();
                     conf = intent.getConfidence();
@@ -259,8 +288,7 @@ public class HistoricalMappingPreparer {
                         TaxonomyPair pair = new TaxonomyPair(intent.getCategory(), intent.getSubCategory());
                         distribution.put(pair, distribution.getOrDefault(pair, 0) + 1);
                         
-                        // Write to STAGING mapping ONLY if valid and successful
-                        // DO NOT write to production directories until human verified.
+                        // Write to staging or production mapping ONLY if valid and successful
                         String stagingDir = stagingDirFile.getAbsolutePath();
                         BufferedWriter bw = getWriter(writers, stagingDir, pair);
                         bw.write(line); // Writes EXACT paths array, no fragmentation, no text
@@ -291,8 +319,8 @@ public class HistoricalMappingPreparer {
                         unc, 
                         escapedText));
                 
-                // Sleep for rate limiting (unless it's a fast API failure)
-                if (!apiFailed) {
+                // Sleep for rate limiting ONLY if we are using an API-based classifier
+                if (!apiFailed && (classifier instanceof com.supportiq.service.LlmIntentClassifier)) {
                     Thread.sleep(50);
                 }
             }
@@ -324,7 +352,9 @@ public class HistoricalMappingPreparer {
         System.out.println("Interactions Selected:       " + interactionsSelected);
         System.out.println("Successful Classifications:  " + successfulClassifications);
         System.out.println("Uncertain Classifications:   " + uncertainClassifications);
+        System.out.println("Unmapped Classifications:    " + unmappedClassifications);
         System.out.println("Invalid Classifications:     " + invalidClassifications);
+        System.out.println("Duplicate Interactions:      " + duplicatePaths);
         System.out.println("API Failures:                " + apiFailures);
         System.out.println("Skipped Interactions:        " + skippedInteractions);
         System.out.println("Total Time (ms):             " + durationMs);
@@ -335,6 +365,30 @@ public class HistoricalMappingPreparer {
             System.out.println("  " + entry.getKey().category.name() + " -> " + entry.getKey().subcategory + ": " + entry.getValue());
         }
         System.out.println("==================================================");
+        
+        // Write mapping_audit.json
+        try {
+            Map<String, Object> auditJson = new HashMap<>();
+            auditJson.put("total_candidates", interactionsSelected);
+            auditJson.put("confidently_mapped", successfulClassifications);
+            auditJson.put("unmapped", unmappedClassifications);
+            auditJson.put("ambiguous", uncertainClassifications);
+            auditJson.put("duplicate_paths", duplicatePaths);
+            auditJson.put("missing_ids", skippedInteractions);
+            auditJson.put("api_failures", apiFailures);
+            auditJson.put("runtime_ms", durationMs);
+            
+            Map<String, Integer> distMap = new TreeMap<>();
+            for (Map.Entry<TaxonomyPair, Integer> entry : distribution.entrySet()) {
+                distMap.put(entry.getKey().category.name() + "->" + entry.getKey().subcategory, entry.getValue());
+            }
+            auditJson.put("taxonomy_distribution", distMap);
+            
+            File auditJsonFile = new File(outputBaseDir, "mapping_audit.json");
+            mapper.writerWithDefaultPrettyPrinter().writeValue(auditJsonFile, auditJson);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     private static BufferedWriter getWriter(Map<TaxonomyPair, BufferedWriter> writers, String baseDir, TaxonomyPair pair) throws IOException {

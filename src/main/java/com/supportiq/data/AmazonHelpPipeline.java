@@ -7,10 +7,12 @@ public class AmazonHelpPipeline {
 
     private final Path csvPath;
     private final String outputDir;
+    private final String workingCsvPath;
 
-    public AmazonHelpPipeline(Path csvPath, String outputDir) {
+    public AmazonHelpPipeline(Path csvPath, String outputDir, String workingCsvPath) {
         this.csvPath = csvPath;
         this.outputDir = outputDir;
+        this.workingCsvPath = workingCsvPath;
     }
 
     public void process() throws Exception {
@@ -84,9 +86,37 @@ public class AmazonHelpPipeline {
             }
         }
 
-        System.out.println("PASS 2: Reconstructing valid conversations...");
+        System.out.println("PASS 2: Reconstructing valid conversations and exporting working dataset...");
         ConversationBuilder builder = new ConversationBuilder();
-        try (CsvReader reader = CsvReader.read(csvPath)) {
+        
+        java.io.File workingFile = new java.io.File(workingCsvPath);
+        workingFile.getParentFile().mkdirs();
+        long workingCsvRows = 0;
+        
+        try (CsvReader reader = CsvReader.read(csvPath);
+             java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(workingFile))) {
+            
+            // Read first line for header
+            if (reader.hasNext()) {
+                TweetRecord firstRecord = reader.next();
+                pw.println("tweet_id,author_id,inbound,created_at,text,response_tweet_id,in_response_to_tweet_id");
+                
+                // Process the first record
+                String tIdStr = firstRecord.getTweet_id();
+                if (tIdStr != null && !tIdStr.trim().isEmpty()) {
+                    try {
+                        long tweetId = Long.parseLong(tIdStr);
+                        if (validIds.contains(tweetId)) {
+                            builder.addRecord(tIdStr, firstRecord.getIn_response_to_tweet_id(), firstRecord.getCreated_at());
+                            pw.println(toCsvRow(firstRecord));
+                            workingCsvRows++;
+                        }
+                    } catch (NumberFormatException e) {
+                        // ignore
+                    }
+                }
+            }
+            
             while (reader.hasNext()) {
                 TweetRecord record = reader.next();
                 String tIdStr = record.getTweet_id();
@@ -95,6 +125,8 @@ public class AmazonHelpPipeline {
                         long tweetId = Long.parseLong(tIdStr);
                         if (validIds.contains(tweetId)) {
                             builder.addRecord(tIdStr, record.getIn_response_to_tweet_id(), record.getCreated_at());
+                            pw.println(toCsvRow(record));
+                            workingCsvRows++;
                         }
                     } catch (NumberFormatException e) {
                         // ignore
@@ -105,18 +137,40 @@ public class AmazonHelpPipeline {
 
         long heapUsed = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
 
-        System.out.println("Writing outputs...");
+        System.out.println("Writing outputs and exclusion report...");
         IntermediateMappingWriter writer = new IntermediateMappingWriter(outputDir);
+        java.io.File exclusionFile = new java.io.File("data/analysis/amazonhelp_exclusion_report.json");
+        exclusionFile.getParentFile().mkdirs();
+        java.io.PrintWriter exclusionWriter = new java.io.PrintWriter(new java.io.FileWriter(exclusionFile));
+        exclusionWriter.println("[");
+        boolean firstExclusion = true;
+        int excludedCount = 0;
+
         long[] rootArray = interactionRoots.toArray();
         Arrays.sort(rootArray);
         long totalPaths = 0;
         long mappingLines = 0;
         for (long rootId : rootArray) {
             List<List<String>> paths = builder.extractPaths(String.valueOf(rootId));
-            writer.writePaths(String.valueOf(rootId), paths);
-            totalPaths += paths.size();
-            mappingLines++;
+            List<List<String>> validPaths = new ArrayList<>();
+            for (List<String> path : paths) {
+                if (path.size() < 2) {
+                    if (!firstExclusion) exclusionWriter.println(",");
+                    exclusionWriter.print("  {\"id\":\"" + path.get(0) + "\", \"reason\":\"ISOLATED_NO_CONTEXT\"}");
+                    firstExclusion = false;
+                    excludedCount++;
+                } else {
+                    validPaths.add(path);
+                }
+            }
+            if (!validPaths.isEmpty()) {
+                writer.writePaths(String.valueOf(rootId), validPaths);
+                totalPaths += validPaths.size();
+                mappingLines++;
+            }
         }
+        exclusionWriter.println("\n]");
+        exclusionWriter.close();
 
         long endTime = System.currentTimeMillis();
 
@@ -142,7 +196,9 @@ public class AmazonHelpPipeline {
         System.out.println("Total valid AmazonHelp interaction IDs: " + validIds.size());
         System.out.println("Total interaction roots: " + interactionRoots.size());
         System.out.println("Total generated paths: " + totalPaths);
-        System.out.println("Total excluded IDs: " + (uniqueIds - validIds.size()));
+        System.out.println("Total structural exclusions: " + excludedCount);
+        System.out.println("Total non-relevant IDs: " + (uniqueIds - validIds.size()));
+        System.out.println("Working dataset written to: " + workingCsvPath + " (" + workingCsvRows + " rows)");
         validator.report();
         System.out.println("Runtime: " + (endTime - startTime) + " ms");
         System.out.println("Observed JVM heap usage (approx): " + heapUsed + " MB");
@@ -205,5 +261,23 @@ public class AmazonHelpPipeline {
         }
 
         return validIds;
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
+    private String toCsvRow(TweetRecord r) {
+        return escapeCsv(r.getTweet_id()) + "," +
+               escapeCsv(r.getAuthor_id()) + "," +
+               r.isInbound() + "," +
+               escapeCsv(r.getCreated_at()) + "," +
+               escapeCsv(r.getText()) + "," +
+               escapeCsv(r.getResponse_tweet_id()) + "," +
+               escapeCsv(r.getIn_response_to_tweet_id());
     }
 }

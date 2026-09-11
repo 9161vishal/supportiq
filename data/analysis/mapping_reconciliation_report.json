@@ -1,0 +1,13 @@
+{
+  "total_ambiguous" : 37652,
+  "duplicate_roots_found" : 0,
+  "all_working_ids_in_twcs" : true,
+  "category_sums_match_mapped" : true,
+  "all_mapped_ids_in_working" : true,
+  "total_mapped" : 12351,
+  "duplicate_paths_found" : 0,
+  "total_candidates" : 82536,
+  "total_skipped" : 632,
+  "global_sums_match_candidates" : true,
+  "total_unmapped" : 31901
+}
