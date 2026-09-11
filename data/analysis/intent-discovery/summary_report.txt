@@ -1,0 +1,30 @@
+==================================================
+INTENT DISCOVERY SUMMARY REPORT
+==================================================
+Total Interactions Analyzed: 82534
+Valid Initial Customer Messages Found: 82534
+Messages with Missing/Unresolvable IDs: 0
+
+Category Frequency (Heuristic Matches):
+ - AMBIGUOUS_CASES                     : 39611
+ - UNCOVERED_CASES                     : 21486
+ - GENERAL_INFORMATION_AND_NON_SUPPORT : 5392
+ - DELIVERY_AND_TRACKING               : 2657
+ - ORDER_MANAGEMENT                    : 2436
+ - PRIME_MEMBERSHIP                    : 1851
+ - PRIME_VIDEO_AND_DIGITAL_CONTENT     : 1720
+ - KINDLE_AND_READING                  : 949
+ - CUSTOMER_SERVICE_EXPERIENCE         : 929
+ - AMAZON_DEVICES                      : 874
+ - RETURNS_AND_REFUNDS                 : 800
+ - SHIPPING_PACKAGING_AND_LOGISTICS    : 790
+ - ACCOUNT_AND_LOGIN                   : 771
+ - PRODUCT_INFORMATION_AND_PRICING     : 588
+ - PROMOTIONS_AND_DISCOUNTS            : 531
+ - PAYMENT_AND_BILLING                 : 306
+ - ADDRESS_AND_DELIVERY_PREFERENCES    : 262
+ - PRODUCT_PROBLEM                     : 160
+ - PRIVACY_AND_SECURITY                : 134
+ - MARKETPLACE_AND_SELLERS             : 132
+ - GIFT_CARDS                          : 103
+ - AMAZON_PAY                          : 52
