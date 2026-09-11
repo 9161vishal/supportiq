@@ -18,6 +18,27 @@ public class MappingWriter {
     }
 
     public void writeMapping(MainCategory mainCategory, SubCategory subCategory, String rootTweetId, List<List<String>> paths) throws IOException {
+        if (rootTweetId == null || rootTweetId.trim().isEmpty()) {
+            throw new IllegalArgumentException("rootTweetId must be present");
+        }
+        if (paths == null || paths.isEmpty()) {
+            throw new IllegalArgumentException("paths must not be null or empty");
+        }
+        
+        for (List<String> path : paths) {
+            if (path == null || path.isEmpty()) {
+                throw new IllegalArgumentException("Path cannot be empty");
+            }
+            if (!rootTweetId.equals(path.get(0))) {
+                throw new IllegalArgumentException("rootTweetId must match the first ID of each path");
+            }
+            for (String id : path) {
+                if (id == null || id.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Paths must contain valid IDs");
+                }
+            }
+        }
+
         Path dirPath = Paths.get(baseDir, mainCategory.name(), subCategory.name());
         Files.createDirectories(dirPath);
         
