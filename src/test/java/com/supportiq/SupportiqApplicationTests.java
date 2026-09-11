@@ -8,10 +8,6 @@ import com.supportiq.service.IntentClassifier;
 import com.supportiq.service.RetrievalService;
 import com.supportiq.service.ResponseGenerator;
 import com.supportiq.service.EscalationService;
-import com.supportiq.model.Intent;
-import com.supportiq.model.RetrievedEvidence;
-import com.supportiq.model.EscalationDecision;
-import com.supportiq.model.CustomerMessage;
 
 @SpringBootTest
 class SupportiqApplicationTests {
@@ -39,8 +35,8 @@ class SupportiqApplicationTests {
         }
     }
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }

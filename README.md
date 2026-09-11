@@ -33,4 +33,9 @@ To run the data processing (when implemented), the raw dataset must be placed lo
 - **Phase 2A**: Completed (Data and Intent Infrastructure finalized. File readers, builders, and validation are in place).
 - **Phase 2B Step 1**: Completed. The full TWCS dataset (~500MB) was successfully processed using a primitive-memory graph to extract AmazonHelp interactions. The `intermediate_paths.jsonl` output has been generated. The raw CSV remains the immutable source of truth, and mappings remain purely ID-based.
 - **Phase 2B Step 2**: Completed (Intent Discovery & Validation). A bounded-memory streaming analyzer extracted 82,534 initial customer messages and generated heuristic frequency and taxonomy validation reports. Evidence verified the 20-category taxonomy and identified a large number of multi-lingual/ambiguous cases without modifying the source dataset.
-- **Phase 2B Step 3**: Pending (Classifier design and category mappings). No LLMs, embeddings, or ML components are implemented yet.
+- **Phase 2B Step 3.1**: Completed (AI Intent Classification). A lightweight, zero-dependency LLM classifier (`LlmIntentClassifier`) built on `java.net.http.HttpClient` maps customer intent directly to `IntentTaxonomy`. 
+    - **Configuration**: Properties include `supportiq.classifier.api-url`, `supportiq.classifier.api-key`, `supportiq.classifier.model` (default `gpt-4o-mini`), and `supportiq.classifier.confidence-threshold` (default `0.6`).
+    - **Confidence**: Model-provided score (0.0 - 1.0); not a calibrated statistical probability.
+    - **Uncertainty & Fallbacks**: Handles ambiguous/multilingual queries naturally. Low confidence triggers an `uncertain=true` flag. Invalid LLM JSON safely falls back to `GENERAL_INFORMATION_AND_NON_SUPPORT`.
+    - **Tests**: Unit tests do not require a live LLM API.
+- **Phase 2B Step 3.2**: Pending (Historical Retrieval & Embeddings). No vector databases, semantic re-ranking, or reply generation have been implemented yet.
