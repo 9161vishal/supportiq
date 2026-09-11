@@ -37,17 +37,21 @@ public class SmokeTestRunner {
         );
 
         try {
-            runTest(classifier, "delivery/tracking", "My order is late, where is it?", "{\"category\":\"DELIVERY_AND_TRACKING\",\"subcategory\":\"LATE_DELIVERY\",\"confidence\":0.95,\"uncertain\":false}");
-            runTest(classifier, "order cancellation", "Please cancel my order 123.", "{\"category\":\"ORDER_MANAGEMENT\",\"subcategory\":\"CANCELLATION\",\"confidence\":0.92,\"uncertain\":false}");
+            runTest(classifier, "delivery/tracking", "My order is late, where is it?", "{\"category\":\"DELIVERY_AND_TRACKING\",\"subcategory\":\"DELIVERY_LATE\",\"confidence\":0.95,\"uncertain\":false}");
+            runTest(classifier, "order cancellation", "Please cancel my order 123.", "{\"category\":\"ORDER_MANAGEMENT\",\"subcategory\":\"CANCEL_ORDER\",\"confidence\":0.92,\"uncertain\":false}");
             runTest(classifier, "refund", "I need my money back for this defective item.", "{\"category\":\"RETURNS_AND_REFUNDS\",\"subcategory\":\"REFUND_REQUEST\",\"confidence\":0.88,\"uncertain\":false}");
-            runTest(classifier, "product problem", "The screen is cracked.", "{\"category\":\"PRODUCT_PROBLEM\",\"subcategory\":\"DAMAGED_ITEM\",\"confidence\":0.90,\"uncertain\":false}");
-            runTest(classifier, "payment", "My credit card was charged twice.", "{\"category\":\"PAYMENT_AND_BILLING\",\"subcategory\":\"DOUBLE_CHARGE\",\"confidence\":0.89,\"uncertain\":false}");
-            runTest(classifier, "Prime", "How do I renew my Prime subscription?", "{\"category\":\"PRIME_MEMBERSHIP\",\"subcategory\":\"RENEWAL\",\"confidence\":0.95,\"uncertain\":false}");
-            runTest(classifier, "account/login", "I forgot my password.", "{\"category\":\"ACCOUNT_AND_LOGIN\",\"subcategory\":\"PASSWORD_RESET\",\"confidence\":0.99,\"uncertain\":false}");
-            runTest(classifier, "gift card", "My gift card balance says zero.", "{\"category\":\"GIFT_CARDS\",\"subcategory\":\"BALANCE_ISSUE\",\"confidence\":0.93,\"uncertain\":false}");
-            runTest(classifier, "device", "Alexa is not responding to my voice.", "{\"category\":\"AMAZON_DEVICES\",\"subcategory\":\"ECHO_UNRESPONSIVE\",\"confidence\":0.91,\"uncertain\":false}");
-            runTest(classifier, "general/non-support", "Thanks for the quick help!", "{\"category\":\"GENERAL_INFORMATION_AND_NON_SUPPORT\",\"subcategory\":\"THANK_YOU\",\"confidence\":0.98,\"uncertain\":false}");
-            runTest(classifier, "non-English Unicode", "Mi paquete no ha llegado hoy.", "{\"category\":\"DELIVERY_AND_TRACKING\",\"subcategory\":\"NOT_ARRIVED\",\"confidence\":0.85,\"uncertain\":false}");
+            runTest(classifier, "product problem", "The screen is cracked.", "{\"category\":\"PRODUCT_PROBLEM\",\"subcategory\":\"DAMAGED_PRODUCT\",\"confidence\":0.90,\"uncertain\":false}");
+            runTest(classifier, "payment", "My credit card was charged twice.", "{\"category\":\"PAYMENT_AND_BILLING\",\"subcategory\":\"CHARGE_OR_BILLING_PROBLEM\",\"confidence\":0.89,\"uncertain\":false}");
+            runTest(classifier, "Prime", "How do I renew my Prime subscription?", "{\"category\":\"PRIME_MEMBERSHIP\",\"subcategory\":\"PRIME_RENEWAL\",\"confidence\":0.95,\"uncertain\":false}");
+            runTest(classifier, "account/login", "I forgot my password.", "{\"category\":\"ACCOUNT_AND_LOGIN\",\"subcategory\":\"PASSWORD_PROBLEM\",\"confidence\":0.99,\"uncertain\":false}");
+            runTest(classifier, "gift card", "My gift card balance says zero.", "{\"category\":\"GIFT_CARDS\",\"subcategory\":\"GIFT_CARD_BALANCE\",\"confidence\":0.93,\"uncertain\":false}");
+            runTest(classifier, "device", "Alexa is not responding to my voice.", "{\"category\":\"AMAZON_DEVICES\",\"subcategory\":\"ECHO_PROBLEM\",\"confidence\":0.91,\"uncertain\":false}");
+            runTest(classifier, "general/non-support", "Thanks for the quick help!", "{\"category\":\"GENERAL_INFORMATION_AND_NON_SUPPORT\",\"subcategory\":\"PRAISE_OR_APPRECIATION\",\"confidence\":0.98,\"uncertain\":false}");
+            runTest(classifier, "non-English Unicode", "Mi paquete no ha llegado hoy.", "{\"category\":\"DELIVERY_AND_TRACKING\",\"subcategory\":\"DELIVERY_LATE\",\"confidence\":0.85,\"uncertain\":false}");
+            
+            System.out.println("--- NEGATIVE TESTS ---");
+            runTest(classifier, "invalid subcategory rejection", "Where is my package?", "{\"category\":\"DELIVERY_AND_TRACKING\",\"subcategory\":\"PACKAGE_IS_SOMEWHERE\",\"confidence\":0.95,\"uncertain\":false}");
+            
         } finally {
             server.stop(0);
         }

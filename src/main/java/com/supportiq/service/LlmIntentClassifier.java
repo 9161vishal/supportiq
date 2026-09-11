@@ -71,14 +71,21 @@ public class LlmIntentClassifier implements IntentClassifier {
         StringBuilder sb = new StringBuilder();
         sb.append("You are an expert customer support intent classifier for AmazonHelp.\n");
         sb.append("Classify the following customer message into EXACTLY ONE of the allowed categories.\n");
-        sb.append("Allowed Categories:\n");
+        sb.append("Allowed Categories and their exact Subcategories:\n");
         for (IntentTaxonomy tax : IntentTaxonomy.values()) {
-            sb.append("- ").append(tax.name()).append("\n");
+            sb.append("- ").append(tax.name()).append(":\n");
+            for (String sub : tax.getSubcategories()) {
+                sb.append("    - ").append(sub).append("\n");
+            }
         }
+        sb.append("\n");
+        sb.append("You MUST choose exactly one allowed category, and exactly one subcategory belonging to that category.\n");
+        sb.append("NEVER invent a subcategory. Return ONLY labels present in the provided taxonomy.\n");
+        sb.append("Classify the PRIMARY customer intent.\n");
         sb.append("\n");
         sb.append("Return a strictly valid JSON object with the following fields:\n");
         sb.append("- \"category\": The exactly matching category string from the allowed list.\n");
-        sb.append("- \"subcategory\": A brief, concise subcategory string.\n");
+        sb.append("- \"subcategory\": The exactly matching subcategory string belonging to the chosen category.\n");
         sb.append("- \"confidence\": A float between 0.0 and 1.0 representing your confidence.\n");
         sb.append("- \"uncertain\": A boolean. Set to true if the query is vague, ambiguous, or matches multiple intents equally without a clear primary intent.\n");
         sb.append("\n");
@@ -142,8 +149,16 @@ public class LlmIntentClassifier implements IntentClassifier {
         IntentTaxonomy category;
         try {
             category = IntentTaxonomy.valueOf(categoryStr);
+            if (!category.isValidSubcategory(subcategoryStr)) {
+                category = IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT;
+                subcategoryStr = "UNKNOWN";
+                confidence = 0.0;
+                uncertain = true;
+            }
         } catch (IllegalArgumentException e) {
             category = IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT;
+            subcategoryStr = "UNKNOWN";
+            confidence = 0.0;
             uncertain = true;
         }
         
