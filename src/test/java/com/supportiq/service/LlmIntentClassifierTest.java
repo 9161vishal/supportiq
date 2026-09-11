@@ -39,11 +39,22 @@ public class LlmIntentClassifierTest {
                 }
             }
             
+            // Assert x-goog-api-key exists and ?key= does NOT exist in URI
+            if (exchange.getRequestURI().toString().contains("?key=")) {
+                customStatusCode = 400;
+                nextResponse = "URL contains secret!";
+            } else if (!exchange.getRequestHeaders().containsKey("x-goog-api-key")) {
+                customStatusCode = 401;
+                nextResponse = "Missing x-goog-api-key";
+            }
+            
             String fullResponse;
             if (nextResponse.equals("EMPTY_BODY")) {
                 fullResponse = "";
             } else if (nextResponse.equals("NULL_RESPONSE")) {
                 fullResponse = "null";
+            } else if (nextResponse.equals("URL contains secret!") || nextResponse.equals("Missing x-goog-api-key")) {
+                fullResponse = nextResponse;
             } else if (nextResponse.startsWith("{") && nextResponse.contains("\"malformed_api_response\"")) {
                 fullResponse = nextResponse;
             } else {
@@ -61,6 +72,8 @@ public class LlmIntentClassifierTest {
 
         apiUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1beta/models/%s:generateContent";
         callCount = 0;
+        requestDelayMs = 0;
+        customStatusCode = 200;
     }
 
     @AfterEach
@@ -70,13 +83,13 @@ public class LlmIntentClassifierTest {
         }
     }
 
-    private LlmIntentClassifier createClassifier(String apiKey, double threshold, int connectTimeoutSec) {
+    private LlmIntentClassifier createClassifier(String apiKey, double threshold, int connectTimeoutSec, int requestTimeoutSec) {
         return new LlmIntentClassifier(apiUrl, apiKey, "test-model", threshold, 
-            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build());
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(), requestTimeoutSec);
     }
 
     private LlmIntentClassifier createDefaultClassifier() {
-        return createClassifier("fake-key", 0.6, 2);
+        return createClassifier("fake-key", 0.6, 2, 2);
     }
 
     private void mockJsonResponse(String jsonContent) {
@@ -237,12 +250,12 @@ public class LlmIntentClassifierTest {
     // Q: missing API key
     @Test
     void testQ_MissingApiKeyThrowsException() {
-        LlmIntentClassifier classifier = createClassifier(null, 0.6, 2);
+        LlmIntentClassifier classifier = createClassifier(null, 0.6, 2, 2);
         assertThrows(IllegalStateException.class, () -> {
             classifier.classify(new CustomerMessage("Hello"));
         });
         
-        LlmIntentClassifier classifier2 = createClassifier("   ", 0.6, 2);
+        LlmIntentClassifier classifier2 = createClassifier("   ", 0.6, 2, 2);
         assertThrows(IllegalStateException.class, () -> {
             classifier2.classify(new CustomerMessage("Hello"));
         });
@@ -296,34 +309,17 @@ public class LlmIntentClassifierTest {
     // V: Network Timeout
     @Test
     void testV_NetworkTimeoutRetries() {
-        LlmIntentClassifier classifier = new LlmIntentClassifier(apiUrl, "fake-key", "test-model", 0.6, 
-            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(1)).build()) {
-            
-            private int mockCallCount = 0;
-            
-            @Override
-            public Intent classify(CustomerMessage message) {
-                if (message == null || message.getText() == null || message.getText().trim().isEmpty()) {
-                    return new Intent(null, null, 0.0, true);
-                }
-                
-                int maxRetries = 3;
-                for (int attempt = 1; attempt <= maxRetries; attempt++) {
-                    mockCallCount++;
-                }
-                if (mockCallCount == 3) {
-                    return new Intent(null, null, 0.0, true);
-                }
-                return super.classify(message);
-            }
-            
-            public int getMockCallCount() {
-                return mockCallCount;
-            }
-        };
+        // Set request timeout to 1 second
+        LlmIntentClassifier classifier = createClassifier("fake-key", 0.6, 2, 1);
+        
+        // Delay response by 2 seconds to force timeout
+        this.requestDelayMs = 2000;
         
         Intent intent = classifier.classify(new CustomerMessage("Hello"));
+        
         assertNull(intent.getCategory());
+        assertTrue(intent.isUncertain());
+        assertEquals(3, callCount); // Retries 3 times due to HttpTimeoutException
     }
 
     // W: malformed provider response
@@ -353,7 +349,7 @@ public class LlmIntentClassifierTest {
     @Test
     void testZ_SecretSafeErrorLogging() {
         String secretKey = "SUPER_SECRET_KEY_12345";
-        LlmIntentClassifier classifier = createClassifier(secretKey, 0.6, 2);
+        LlmIntentClassifier classifier = createClassifier(secretKey, 0.6, 2, 2);
         
         // Cause a 401 error
         mockHttpResponse(401, "Unauthorized access to " + secretKey);
@@ -373,5 +369,39 @@ public class LlmIntentClassifierTest {
             String msg = ex.getMessage();
             assertFalse(msg.contains(secretKey), "Exception message leaked the secret key!");
         }
+    }
+
+    // AA: Empty/Null CustomerMessage tests
+    @Test
+    void testAA_NullOrEmptyMessageReturnsFallbackWithoutApiCall() {
+        LlmIntentClassifier classifier = createDefaultClassifier();
+        
+        Intent intent1 = classifier.classify(null);
+        assertNull(intent1.getCategory());
+        assertTrue(intent1.isUncertain());
+
+        Intent intent2 = classifier.classify(new CustomerMessage(null));
+        assertNull(intent2.getCategory());
+        assertTrue(intent2.isUncertain());
+
+        Intent intent3 = classifier.classify(new CustomerMessage("   "));
+        assertNull(intent3.getCategory());
+        assertTrue(intent3.isUncertain());
+        
+        assertEquals(0, callCount); // No API calls should be made
+    }
+
+    // AB: Header Security Test
+    @Test
+    void testAB_HeaderSecurityAndUrlSecurity() {
+        String secretKey = "HEADER_SECRET_99999";
+        LlmIntentClassifier classifier = createClassifier(secretKey, 0.6, 2, 2);
+        mockJsonResponse("{ \"category\": \"ORDER_MANAGEMENT\", \"subcategory\": \"CANCEL_ORDER\", \"confidence\": 0.95, \"uncertain\": false }");
+        
+        // Our mock server is configured to check for ?key= in URI and x-goog-api-key in headers.
+        Intent intent = classifier.classify(new CustomerMessage("Hello"));
+        
+        assertEquals(IntentTaxonomy.ORDER_MANAGEMENT, intent.getCategory());
+        assertEquals(1, callCount);
     }
 }

@@ -27,24 +27,28 @@ public class LlmIntentClassifier implements IntentClassifier {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    private final long requestTimeoutSec;
+
     @org.springframework.beans.factory.annotation.Autowired
     public LlmIntentClassifier(
             @Value("${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
             @Value("${supportiq.classifier.model:gemini-3.6-flash}") String model,
             @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold,
-            @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec) {
+            @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec,
+            @Value("${supportiq.classifier.request-timeout-sec:30}") long requestTimeoutSec) {
         this(apiUrl, System.getenv("SUPPORTIQ_AI_API_KEY"), model, confidenceThreshold, 
-             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build());
+             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(), requestTimeoutSec);
     }
 
     // For testing
-    LlmIntentClassifier(String apiUrl, String apiKey, String model, double confidenceThreshold, HttpClient httpClient) {
+    LlmIntentClassifier(String apiUrl, String apiKey, String model, double confidenceThreshold, HttpClient httpClient, long requestTimeoutSec) {
         this.apiUrl = apiUrl;
         this.apiKey = apiKey;
         this.model = model;
         this.confidenceThreshold = confidenceThreshold;
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper();
+        this.requestTimeoutSec = requestTimeoutSec;
     }
 
     @Override
@@ -114,13 +118,14 @@ public class LlmIntentClassifier implements IntentClassifier {
         requestBody.put("generationConfig", genConfig);
 
         String jsonBody = objectMapper.writeValueAsString(requestBody);
-        String finalUrl = String.format(apiUrl, model) + "?key=" + apiKey;
+        String finalUrl = String.format(apiUrl, model);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(finalUrl))
                 .header("Content-Type", "application/json")
+                .header("x-goog-api-key", apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .timeout(Duration.ofSeconds(30))
+                .timeout(Duration.ofSeconds(requestTimeoutSec))
                 .build();
 
         int maxRetries = 3;

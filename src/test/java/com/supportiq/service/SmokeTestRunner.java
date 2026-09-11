@@ -23,7 +23,8 @@ public class SmokeTestRunner {
             apiKey, 
             "gemini-3.6-flash", 
             0.6,
-            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build(),
+            30L
         );
 
         String[] testMessages = {

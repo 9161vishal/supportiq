@@ -107,7 +107,8 @@ public class HistoricalMappingPreparer {
                 "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent",
                 model,
                 0.6,
-                10L
+                10L,
+                30L
         );
 
         runValidation(inputPath, outputBaseDir, limit, classifier, csvReader, offsetIndex);
