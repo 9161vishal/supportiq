@@ -306,11 +306,9 @@ public class LlmResponseGeneratorTest {
         RetrievedEvidence evidence = createMockEvidence(1);
 
         String response = generator.generateResponse(msg, intent, evidence);
-        assertEquals("Response.", response);
-        
-        String genPrompt = capturedRequests.get(1);
-        assertTrue(genPrompt.contains("EVIDENCE 0"));
-        assertFalse(genPrompt.contains("EVIDENCE 1")); // Only one instance of index 0
+        // Both duplicate instances of candidate 0 are rejected, so 0 candidates pass the threshold
+        assertEquals(LlmResponseGenerator.FALLBACK_RESPONSE, response);
+        assertEquals(1, callCount.get()); // Only selection called
     }
 
     @Test

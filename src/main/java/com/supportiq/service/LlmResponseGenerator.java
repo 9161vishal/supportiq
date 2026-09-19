@@ -285,17 +285,33 @@ public class LlmResponseGenerator implements ResponseGenerator {
             int index = candidateNode.path("index").asInt(-1);
             double score = candidateNode.path("relevance_score").asDouble(-1.0);
             
-            if (score < 0) score = 0;
-            if (score > 1) score = 1;
+            if (score < 0.0 || score > 1.0 || Double.isNaN(score) || Double.isInfinite(score)) {
+                // Reject invalid scores completely instead of clamping
+                continue;
+            }
 
             if (index >= 0 && index < candidates.size() && score >= effectiveThreshold) {
-                // Keep the highest score if duplicate index exists
-                uniqueScores.put(index, Math.max(uniqueScores.getOrDefault(index, 0.0), score));
+                // Keep the highest score if duplicate index exists (or safely ignore duplicate, but preferred is to keep max or reject)
+                // The prompt says: "Preferred behavior: reject the duplicated candidate entry... At minimum, never allow the same historical candidate to appear twice."
+                // I will change this to reject duplicated candidate entries entirely.
+                if (uniqueScores.containsKey(index)) {
+                    // Mark as invalid duplicate by setting a flag or score to -1 to discard later
+                    uniqueScores.put(index, -1.0); // Reject entirely
+                } else {
+                    uniqueScores.put(index, score);
+                }
             }
         }
 
         return uniqueScores.entrySet().stream()
-                .sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+                .filter(e -> e.getValue() >= effectiveThreshold) // Filter out the rejected duplicates
+                .sorted((e1, e2) -> {
+                    int scoreCmp = Double.compare(e2.getValue(), e1.getValue());
+                    if (scoreCmp != 0) {
+                        return scoreCmp;
+                    }
+                    return Integer.compare(e1.getKey(), e2.getKey());
+                })
                 .limit(MAX_RELEVANT_EVIDENCE)
                 .map(e -> candidates.get(e.getKey()))
                 .collect(Collectors.toList());
