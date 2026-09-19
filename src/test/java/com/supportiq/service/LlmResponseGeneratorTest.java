@@ -312,6 +312,42 @@ public class LlmResponseGeneratorTest {
     }
 
     @Test
+    void testDuplicateSelectedIndexesWhereFirstIsBelowThreshold() {
+        LlmResponseGenerator generator = createDefaultGenerator();
+        mockSequencedResponses(
+                "{ \"selected_candidates\": [ { \"index\": 0, \"relevance_score\": 0.50 }, { \"index\": 0, \"relevance_score\": 0.95 } ] }",
+                "{ \"response\": \"Response.\" }"
+        );
+
+        CustomerMessage msg = new CustomerMessage("Where is my stuff?");
+        Intent intent = new Intent(IntentTaxonomy.DELIVERY_AND_TRACKING, "TRACKING_NOT_UPDATED", 0.95, false);
+        RetrievedEvidence evidence = createMockEvidence(1);
+
+        String response = generator.generateResponse(msg, intent, evidence);
+        // The duplicate candidate 0 must be rejected completely.
+        assertEquals(LlmResponseGenerator.FALLBACK_RESPONSE, response);
+        assertEquals(1, callCount.get()); // Response generation must NOT be called
+    }
+
+    @Test
+    void testDuplicateSelectedIndexesWhereSecondIsBelowThreshold() {
+        LlmResponseGenerator generator = createDefaultGenerator();
+        mockSequencedResponses(
+                "{ \"selected_candidates\": [ { \"index\": 0, \"relevance_score\": 0.95 }, { \"index\": 0, \"relevance_score\": 0.50 } ] }",
+                "{ \"response\": \"Response.\" }"
+        );
+
+        CustomerMessage msg = new CustomerMessage("Where is my stuff?");
+        Intent intent = new Intent(IntentTaxonomy.DELIVERY_AND_TRACKING, "TRACKING_NOT_UPDATED", 0.95, false);
+        RetrievedEvidence evidence = createMockEvidence(1);
+
+        String response = generator.generateResponse(msg, intent, evidence);
+        // The duplicate candidate 0 must be rejected completely.
+        assertEquals(LlmResponseGenerator.FALLBACK_RESPONSE, response);
+        assertEquals(1, callCount.get()); // Response generation must NOT be called
+    }
+
+    @Test
     void testUncertainIntentIncreasesThreshold() {
         LlmResponseGenerator generator = createDefaultGenerator();
         // threshold 0.7, but uncertain makes it Math.max(0.7, 0.8) = 0.8

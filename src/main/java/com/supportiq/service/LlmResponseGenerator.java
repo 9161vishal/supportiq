@@ -285,21 +285,21 @@ public class LlmResponseGenerator implements ResponseGenerator {
             int index = candidateNode.path("index").asInt(-1);
             double score = candidateNode.path("relevance_score").asDouble(-1.0);
             
+            if (index < 0 || index >= candidates.size()) {
+                continue; // Reject out of bounds completely
+            }
+            
             if (score < 0.0 || score > 1.0 || Double.isNaN(score) || Double.isInfinite(score)) {
                 // Reject invalid scores completely instead of clamping
                 continue;
             }
 
-            if (index >= 0 && index < candidates.size() && score >= effectiveThreshold) {
-                // Keep the highest score if duplicate index exists (or safely ignore duplicate, but preferred is to keep max or reject)
-                // The prompt says: "Preferred behavior: reject the duplicated candidate entry... At minimum, never allow the same historical candidate to appear twice."
-                // I will change this to reject duplicated candidate entries entirely.
-                if (uniqueScores.containsKey(index)) {
-                    // Mark as invalid duplicate by setting a flag or score to -1 to discard later
-                    uniqueScores.put(index, -1.0); // Reject entirely
-                } else {
-                    uniqueScores.put(index, score);
-                }
+            // Duplicate detection must happen BEFORE threshold check.
+            if (uniqueScores.containsKey(index)) {
+                // Mark as invalid duplicate by setting a flag or score to -1 to discard later
+                uniqueScores.put(index, -1.0); // Reject entirely
+            } else {
+                uniqueScores.put(index, score);
             }
         }
 
