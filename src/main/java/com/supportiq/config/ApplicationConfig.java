@@ -11,15 +11,14 @@ import com.supportiq.service.EscalationService;
 public class ApplicationConfig {
 
     @Bean
-    public RetrievalService retrievalService() {
-        return (message, intent) -> null;
+    public RetrievalService retrievalService(com.supportiq.service.HistoricalRetrievalService historicalRetrievalService) {
+        return new com.supportiq.service.RetrievalServiceImpl(historicalRetrievalService);
     }
 
-    @Bean
-    public ResponseGenerator responseGenerator() {
-        return (message, intent, evidence) -> null;
-    }
-
+    // ResponseGenerator is a Spring @Service (LlmResponseGenerator)
+    // So we don't need a @Bean for it if component scanning picks it up.
+    // However, to avoid conflicts, we can just remove the placeholder bean.
+    
     @Bean
     public EscalationService escalationService() {
         return (message, reply) -> null;

@@ -13,6 +13,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,16 +22,17 @@ public class LlmIntentClassifierTest {
 
     private HttpServer server;
     private String apiUrl;
-    private String nextResponse = "";
-    private int customStatusCode = 200;
-    private int requestDelayMs = 0;
-    private int callCount = 0;
+    private volatile String nextResponse = "";
+    private volatile int customStatusCode = 200;
+    private volatile int requestDelayMs = 0;
+    private final AtomicInteger callCount = new AtomicInteger(0);
+    private volatile String expectedApiKey = "fake-key";
 
     @BeforeEach
     void setUp() throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/v1beta/models/test-model:generateContent", (HttpExchange exchange) -> {
-            callCount++;
+            callCount.incrementAndGet();
             
             if (requestDelayMs > 0) {
                 try {
@@ -39,13 +42,16 @@ public class LlmIntentClassifierTest {
                 }
             }
             
-            // Assert x-goog-api-key exists and ?key= does NOT exist in URI
+            // Assert x-goog-api-key exists, equals expected, and ?key= does NOT exist in URI
             if (exchange.getRequestURI().toString().contains("?key=")) {
                 customStatusCode = 400;
                 nextResponse = "URL contains secret!";
             } else if (!exchange.getRequestHeaders().containsKey("x-goog-api-key")) {
                 customStatusCode = 401;
                 nextResponse = "Missing x-goog-api-key";
+            } else if (!expectedApiKey.equals(exchange.getRequestHeaders().getFirst("x-goog-api-key"))) {
+                customStatusCode = 401;
+                nextResponse = "Invalid x-goog-api-key";
             }
             
             String fullResponse;
@@ -67,13 +73,14 @@ public class LlmIntentClassifierTest {
                 os.write(responseBytes);
             }
         });
-        server.setExecutor(null);
+        server.setExecutor(Executors.newCachedThreadPool());
         server.start();
 
         apiUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1beta/models/%s:generateContent";
-        callCount = 0;
+        callCount.set(0);
         requestDelayMs = 0;
         customStatusCode = 200;
+        expectedApiKey = "fake-key";
     }
 
     @AfterEach
@@ -84,6 +91,9 @@ public class LlmIntentClassifierTest {
     }
 
     private LlmIntentClassifier createClassifier(String apiKey, double threshold, int connectTimeoutSec, int requestTimeoutSec) {
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
+            this.expectedApiKey = apiKey;
+        }
         return new LlmIntentClassifier(apiUrl, apiKey, "test-model", threshold, 
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(), requestTimeoutSec);
     }
@@ -270,14 +280,14 @@ public class LlmIntentClassifierTest {
         assertThrows(IllegalStateException.class, () -> {
             classifier.classify(new CustomerMessage("Hello"));
         });
-        assertEquals(1, callCount); // No retries for 401
+        assertEquals(1, callCount.get()); // No retries for 401
         
-        callCount = 0;
+        callCount.set(0);
         mockHttpResponse(403, "Forbidden");
         assertThrows(IllegalStateException.class, () -> {
             classifier.classify(new CustomerMessage("Hello"));
         });
-        assertEquals(1, callCount); // No retries for 403
+        assertEquals(1, callCount.get()); // No retries for 403
     }
 
     // T: HTTP 429
@@ -290,7 +300,7 @@ public class LlmIntentClassifierTest {
         
         assertNull(intent.getCategory());
         assertTrue(intent.isUncertain());
-        assertEquals(3, callCount); // Should retry 3 times
+        assertEquals(3, callCount.get()); // Should retry 3 times
     }
 
     // U: HTTP 500
@@ -303,7 +313,7 @@ public class LlmIntentClassifierTest {
         
         assertNull(intent.getCategory());
         assertTrue(intent.isUncertain());
-        assertEquals(3, callCount); // Should retry 3 times
+        assertEquals(3, callCount.get()); // Should retry 3 times
     }
 
     // V: Network Timeout
@@ -319,7 +329,7 @@ public class LlmIntentClassifierTest {
         
         assertNull(intent.getCategory());
         assertTrue(intent.isUncertain());
-        assertEquals(3, callCount); // Retries 3 times due to HttpTimeoutException
+        assertEquals(3, callCount.get()); // Retries 3 times due to HttpTimeoutException
     }
 
     // W: malformed provider response
@@ -342,7 +352,7 @@ public class LlmIntentClassifierTest {
         
         classifier.classify(new CustomerMessage("Hello"));
         
-        assertEquals(3, callCount); // Retry limit is exactly 3.
+        assertEquals(3, callCount.get()); // Retry limit is exactly 3.
     }
 
     // Z: Secret-safe error logging
@@ -388,7 +398,7 @@ public class LlmIntentClassifierTest {
         assertNull(intent3.getCategory());
         assertTrue(intent3.isUncertain());
         
-        assertEquals(0, callCount); // No API calls should be made
+        assertEquals(0, callCount.get()); // No API calls should be made
     }
 
     // AB: Header Security Test
@@ -402,6 +412,6 @@ public class LlmIntentClassifierTest {
         Intent intent = classifier.classify(new CustomerMessage("Hello"));
         
         assertEquals(IntentTaxonomy.ORDER_MANAGEMENT, intent.getCategory());
-        assertEquals(1, callCount);
+        assertEquals(1, callCount.get());
     }
 }

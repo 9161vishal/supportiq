@@ -3,13 +3,13 @@ package com.supportiq.model;
 import java.util.List;
 
 public class RetrievedEvidence {
-    private List<HistoricalCase> historicalCases;
+    private List<HistoricalConversation> historicalCases;
 
-    public RetrievedEvidence(List<HistoricalCase> historicalCases) {
+    public RetrievedEvidence(List<HistoricalConversation> historicalCases) {
         this.historicalCases = historicalCases;
     }
 
-    public List<HistoricalCase> getHistoricalCases() {
+    public List<HistoricalConversation> getHistoricalCases() {
         return historicalCases;
     }
 }
