@@ -26,7 +26,7 @@ public class RetrievalServiceImpl implements RetrievalService {
         List<HistoricalConversation> candidates = historicalRetrievalService.retrieve(
                 intent.getCategory(), 
                 intent.getSubCategory(), 
-                10 // Max candidates limit for the LLM context
+                20 // Max candidates limit for the AI #2 relevance evaluation
         );
 
         return new RetrievedEvidence(candidates);

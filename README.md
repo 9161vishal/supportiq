@@ -47,11 +47,11 @@ To run the data processing (when implemented), the raw dataset must be placed lo
     - **Separation of Concerns**: Semantic re-ranking is explicitly excluded. This layer only produces valid, deterministic candidates for future pipelines to rank.
 - **Phase 4**: Completed (AI #2 Semantic Relevance Assessment). Uses an LLM to evaluate the semantic relevance of historically matched candidates.
     - **Relevance Score**: Outputs a structured float `0.0` - `1.0`.
-    - **Selection**: Selects the single best candidate index for generating a response.
-    - **Context Bounds**: Caps historical candidates to top 10 items from `HistoricalRetrievalService`.
+    - **Selection**: Selects multiple strictly relevant candidate indices (up to 10).
+    - **Context Bounds**: Caps historical input candidates to top 20 items from `HistoricalRetrievalService`. Maximum selected evidence is strictly capped at 10.
 - **Phase 5**: Completed (AI #2 Grounded Response Generation).
-    - **Grounding**: Generates a customer-facing response based strictly on the selected historical candidate.
-    - **Prompt Injection Protection**: Employs explicit system instructions against instructions in untrusted customer and historical message data. Messages are encoded cleanly into JSON via Jackson.
+    - **Grounding**: Generates a customer-facing response based strictly on the selected historical candidates (max 10). The final response generation receives ONLY the selected evidence.
+    - **Prompt Injection Protection**: Employs explicit system instructions explicitly treating customer and historical messages as untrusted data.
     - **Configuration**: Properties include `supportiq.generator.api-url`, `supportiq.generator.model`, `supportiq.generator.relevance-threshold`.
-    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, or LLM returns malformed JSON.
+    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, malformed JSON, or conflicting/unsafe evidence.
 - **Phase 6**: Pending (AI #3 Proof/Evaluation & Escalation Decision). No golden dataset, LLM judge, or evaluation reporting has been implemented yet.
