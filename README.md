@@ -45,6 +45,13 @@ To run the data processing (when implemented), the raw dataset must be placed lo
     - **Retrieval**: `CsvOffsetReader` uses `RandomAccessFile` to seek directly to the exact byte offset for a candidate tweet and parse it efficiently.
     - **Branching**: Full relationship structures (e.g., Customer → AmazonHelp → Customer) are strictly preserved within the `HistoricalCandidate` model.
     - **Separation of Concerns**: Semantic re-ranking is explicitly excluded. This layer only produces valid, deterministic candidates for future pipelines to rank.
-- **Phase 4**: Pending (AI #2 Semantic Relevance Ranking). No vector databases or embeddings have been implemented yet.
-- **Phase 5**: Pending (AI #3 Grounded Response Generation).
-- **Phase 6**: Pending (Escalation decision).
+- **Phase 4**: Completed (AI #2 Semantic Relevance Assessment). Uses an LLM to evaluate the semantic relevance of historically matched candidates.
+    - **Relevance Score**: Outputs a structured float `0.0` - `1.0`.
+    - **Selection**: Selects the single best candidate index for generating a response.
+    - **Context Bounds**: Caps historical candidates to top 10 items from `HistoricalRetrievalService`.
+- **Phase 5**: Completed (AI #2 Grounded Response Generation).
+    - **Grounding**: Generates a customer-facing response based strictly on the selected historical candidate.
+    - **Prompt Injection Protection**: Employs explicit system instructions against instructions in untrusted customer and historical message data. Messages are encoded cleanly into JSON via Jackson.
+    - **Configuration**: Properties include `supportiq.generator.api-url`, `supportiq.generator.model`, `supportiq.generator.relevance-threshold`.
+    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, or LLM returns malformed JSON.
+- **Phase 6**: Pending (AI #3 Proof/Evaluation & Escalation Decision). No golden dataset, LLM judge, or evaluation reporting has been implemented yet.
