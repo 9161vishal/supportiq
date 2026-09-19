@@ -42,8 +42,9 @@ public class LockDataExtractionModule {
 
         Path csvPath = Paths.get("data/raw/twcs.csv").toAbsolutePath();
         String outputDir = Paths.get("data/mapping/AmazonHelp").toAbsolutePath().toString();
-        String workingCsv = Paths.get("data/working/AmazonHelp/amazonhelp_relevant_tweets.csv").toAbsolutePath().toString();
-        
+        String workingCsv = Paths.get("data/working/AmazonHelp/amazonhelp_relevant_tweets.csv").toAbsolutePath()
+                .toString();
+
         System.out.println("1. Verifying Source Immutability...");
         String initialHash = calculateSHA256(csvPath);
         System.out.println("Source SHA-256: " + initialHash);
@@ -58,7 +59,7 @@ public class LockDataExtractionModule {
         TweetOffsetIndex offsetIndex = csvReader.buildIndex();
 
         DeterministicIntentClassifier classifier = new DeterministicIntentClassifier();
-        
+
         String inputPathsFile = "data/mapping/AmazonHelp/intermediate_paths.jsonl";
         HistoricalMappingPreparer.runValidation(
                 inputPathsFile,
@@ -66,13 +67,12 @@ public class LockDataExtractionModule {
                 -1,
                 classifier,
                 csvReader,
-                offsetIndex
-        );
+                offsetIndex);
 
         System.out.println("\n4. Running Quality Gates and Reconciliations...");
         MappingReconciliationValidator validator = new MappingReconciliationValidator();
         validator.validate(outputDir, workingCsv);
-        
+
         System.out.println("\n5. Generating Taxonomy Evidence Report...");
         TaxonomyEvidenceReporter taxonomyReporter = new TaxonomyEvidenceReporter();
         taxonomyReporter.generateReport(outputDir);

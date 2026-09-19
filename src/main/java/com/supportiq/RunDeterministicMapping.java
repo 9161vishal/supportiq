@@ -44,9 +44,8 @@ public class RunDeterministicMapping {
                 -1,
                 classifier,
                 csvReader,
-                offsetIndex
-        );
-        
+                offsetIndex);
+
         System.out.println("Deterministic Mapping Complete.");
 
         System.out.println("Running mapping reconciliation validation...");
