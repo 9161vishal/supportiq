@@ -32,7 +32,7 @@ class GoldenDatasetTest {
     
     @Test
     void testJudgeResponseParsing() {
-        LlmJudge.JudgeResult res = new LlmJudge().evaluate(null, null);
+        LlmJudge.JudgeResult res = new LlmJudge().evaluate(new com.supportiq.model.CustomerMessage("test"), new com.supportiq.model.SupportResponse(null, null, null, null));
         assertFalse(res.success);
     }
 }
