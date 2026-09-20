@@ -28,8 +28,6 @@ public class ApplicationConfig {
     // So we don't need a @Bean for it if component scanning picks it up.
     // However, to avoid conflicts, we can just remove the placeholder bean.
 
-    @Bean
-    public EscalationService escalationService() {
-        return (message, reply) -> null;
-    }
+    // EscalationService is a Spring @Service (EscalationServiceImpl)
+    // So we don't need a @Bean for it if component scanning picks it up.
 }

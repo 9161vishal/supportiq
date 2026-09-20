@@ -7,9 +7,9 @@ public class EscalationDecision {
     }
 
     private Decision decision;
-    private String reason;
+    private EscalationReason reason;
 
-    public EscalationDecision(Decision decision, String reason) {
+    public EscalationDecision(Decision decision, EscalationReason reason) {
         this.decision = decision;
         this.reason = reason;
     }
@@ -18,7 +18,7 @@ public class EscalationDecision {
         return decision;
     }
 
-    public String getReason() {
+    public EscalationReason getReason() {
         return reason;
     }
 }

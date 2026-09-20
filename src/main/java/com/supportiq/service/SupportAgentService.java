@@ -28,7 +28,7 @@ public class SupportAgentService {
         Intent intent = intentClassifier.classify(message);
         RetrievedEvidence evidence = retrievalService.retrieve(message, intent);
         String reply = responseGenerator.generateResponse(message, intent, evidence);
-        EscalationDecision decision = escalationService.evaluate(message, reply);
+        EscalationDecision decision = escalationService.evaluate(message, intent, evidence, reply);
 
         return new SupportResponse(intent, decision, reply, evidence);
     }
