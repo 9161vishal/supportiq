@@ -1,14 +1,25 @@
 package com.supportiq.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
+import com.supportiq.service.RetrievalService;
 
 @Configuration
 public class ApplicationConfig {
-    // HistoricalRetriever is a @Service that reads from data/raw/twcs.csv + mapping files.
-    // LlmIntentClassifier is a @Service with supportiq.classifier.* config.
-    // LlmResponseGenerator is a @Service with supportiq.generator.* config.
-    // HumanSupportServiceImpl is a @Service with supportiq.human-support.* config.
-    // EscalationServiceImpl is a @Service but NOT used in customer flow.
-    // All services are auto-discovered by Spring component scanning.
+
+    @Bean
+    public com.supportiq.service.HistoricalRetrievalService historicalRetrievalService(
+            @org.springframework.beans.factory.annotation.Value("${supportiq.csv.working:data/working/AmazonHelp/amazonhelp_relevant_tweets.csv}") String workingCsvPath,
+            @org.springframework.beans.factory.annotation.Value("${supportiq.mapping.base-dir:data/mapping/AmazonHelp}") String mappingBaseDir)
+            throws java.io.IOException {
+        return new com.supportiq.service.HistoricalRetrievalServiceImpl(workingCsvPath, mappingBaseDir);
+    }
+
+    @Bean
+    public RetrievalService retrievalService(
+            com.supportiq.service.HistoricalRetrievalService historicalRetrievalService) {
+        return new com.supportiq.service.RetrievalServiceImpl(historicalRetrievalService);
+    }
 }
+
 

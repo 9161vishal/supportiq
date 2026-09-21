@@ -92,7 +92,11 @@ public class GoldenEvaluator {
         // Spin up Spring context to run baselines & AI pipeline
         ApplicationContext context = SpringApplication.run(SupportiqApplication.class, args);
         DeterministicIntentClassifier ruleClassifier = new DeterministicIntentClassifier();
-        SupportAgentService supportAgent = context.getBean(SupportAgentService.class);
+        
+        com.supportiq.service.IntentClassifier intentClassifier = context.getBean(com.supportiq.service.IntentClassifier.class);
+        com.supportiq.service.RetrievalService retrievalService = context.getBean(com.supportiq.service.RetrievalService.class);
+        com.supportiq.service.ResponseGenerator responseGenerator = context.getBean(com.supportiq.service.ResponseGenerator.class);
+        com.supportiq.service.EscalationService escalationService = context.getBean(com.supportiq.service.EscalationService.class);
         
         MetricsCalculator ruleIntentMetrics = new MetricsCalculator();
         MetricsCalculator aiIntentMetrics = new MetricsCalculator();
@@ -130,10 +134,14 @@ public class GoldenEvaluator {
             var ruleIntent = ruleClassifier.classify(msg);
             ruleIntentMetrics.addPrediction(ex.expectedIntent, ruleIntent != null ? ruleIntent.getCategory().name() : "INVALID");
             
-            // SupportIQ Pipeline
+            // SupportIQ Pipeline (Evaluation Path)
             SupportResponse response = null;
             try {
-                response = supportAgent.handleMessage(msg);
+                com.supportiq.model.Intent intent = intentClassifier.classify(msg);
+                com.supportiq.model.RetrievedEvidence evidence = retrievalService.retrieve(msg, intent);
+                String reply = responseGenerator.generateResponse(msg, intent, evidence);
+                com.supportiq.model.EscalationDecision decision = escalationService.evaluate(msg, intent, evidence, reply);
+                response = new SupportResponse(intent, decision, reply, evidence);
                 
                 aiIntentMetrics.addPrediction(ex.expectedIntent, response.getIntent() != null ? response.getIntent().getCategory().name() : "INVALID");
                 aiEscalationMetrics.addPrediction(ex.expectedDecision, response.getDecision() != null ? response.getDecision().getDecision().name() : "INVALID");
