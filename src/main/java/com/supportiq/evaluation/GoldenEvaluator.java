@@ -30,20 +30,25 @@ public class GoldenEvaluator {
         List<EvaluationExample> examples = new ArrayList<>();
         Map<String, Integer> expectedIntentCounts = new HashMap<>();
         
+        Map<String, CustomerMessage> messageMap = loadMessages("data/raw/twcs/twcs.csv");
+        
         if (lines.size() > 1) {
             for (int i = 1; i < lines.size(); i++) {
                 String[] parts = parseCsvLine(lines.get(i));
-            if (parts.length < 14) continue;
+            if (parts.length < 12) continue;
             
             EvaluationExample ex = new EvaluationExample();
             ex.exampleId = parts[0];
             ex.sourceTweetId = parts[1];
-            ex.customerMessage = parts[2];
-            ex.expectedIntent = parts[3];
-            ex.expectedSubcategory = parts[4];
-            ex.expectedDecision = parts[5];
-            ex.expectedReason = parts[6];
-            ex.annotatorBIntent = parts[13];
+            ex.expectedIntent = parts[2];
+            ex.expectedSubcategory = parts[3];
+            ex.expectedDecision = parts[4];
+            ex.expectedReason = parts[5];
+            ex.humanResponseReference = parts[6];
+            ex.annotatorBIntent = parts[9];
+            
+            CustomerMessage cm = messageMap.get(ex.sourceTweetId);
+            ex.customerMessage = (cm != null) ? cm.getText() : "";
             
             examples.add(ex);
             
@@ -94,7 +99,15 @@ public class GoldenEvaluator {
         DeterministicIntentClassifier ruleClassifier = new DeterministicIntentClassifier();
         
         com.supportiq.service.IntentClassifier intentClassifier = context.getBean(com.supportiq.service.IntentClassifier.class);
-        com.supportiq.service.RetrievalService retrievalService = context.getBean(com.supportiq.service.RetrievalService.class);
+        
+        com.supportiq.service.RetrievalService retrievalService = null;
+        try {
+            com.supportiq.service.HistoricalRetrievalService hrs = new com.supportiq.service.HistoricalRetrievalServiceImpl("data/working/AmazonHelp/amazonhelp_relevant_tweets.csv", "data/mapping/AmazonHelp");
+            retrievalService = new com.supportiq.service.RetrievalServiceImpl(hrs);
+        } catch (Exception e) {
+            System.err.println("Failed to initialize old RetrievalService for evaluation: " + e.getMessage());
+        }
+        
         com.supportiq.service.ResponseGenerator responseGenerator = context.getBean(com.supportiq.service.ResponseGenerator.class);
         com.supportiq.service.EscalationService escalationService = context.getBean(com.supportiq.service.EscalationService.class);
         

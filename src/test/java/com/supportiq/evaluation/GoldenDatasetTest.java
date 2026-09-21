@@ -12,7 +12,7 @@ class GoldenDatasetTest {
     @Test
     void testGoldenDatasetIntegrity() throws Exception {
         Path goldenCsvPath = Paths.get("data/evaluation/golden_dataset.csv");
-        if (!Files.exists(goldenCsvPath)) return;
+        assertTrue(Files.exists(goldenCsvPath), "Golden dataset file must exist");
         
         List<String> lines = Files.readAllLines(goldenCsvPath);
         assertTrue(lines.size() > 0, "Golden dataset should have at least a header");
@@ -20,21 +20,22 @@ class GoldenDatasetTest {
         String header = lines.get(0);
         assertTrue(header.contains("example_id"));
         assertTrue(header.contains("source_tweet_id"));
-        assertTrue(header.contains("human_gold_intent"));
+        assertTrue(header.contains("expected_intent"));
+        assertTrue(header.contains("expected_subcategory"));
+        assertTrue(header.contains("expected_escalation_decision"));
+        assertTrue(header.contains("expected_escalation_reason"));
+        assertTrue(header.contains("human_response_reference"));
+        assertTrue(header.contains("annotator_id"));
+        assertTrue(header.contains("annotation_timestamp"));
+        assertTrue(header.contains("annotator_b_intent"));
+        assertTrue(header.contains("annotator_b_decision"));
+        assertTrue(header.contains("annotator_b_reason"));
         
         for (int i = 1; i < lines.size(); i++) {
             String[] parts = parseCsvLine(lines.get(i));
-            assertEquals(14, parts.length, "Row should have exactly 14 columns");
+            assertEquals(12, parts.length, "Row should have exactly 12 columns");
             assertFalse(parts[0].trim().isEmpty(), "example_id cannot be empty");
             assertFalse(parts[1].trim().isEmpty(), "source_tweet_id cannot be empty");
-            
-            // Check for customer_message
-            assertFalse(parts[2].trim().isEmpty(), "customer_message cannot be empty");
-            assertFalse(parts[2].contains("Mock message for"), "customer_message must not be synthetic");
-            
-            // Assert all gold truth is PENDING
-            assertEquals("PENDING", parts[3], "human_gold_intent must be PENDING");
-            assertEquals("PENDING", parts[4], "human_gold_subcategory must be PENDING");
         }
     }
     
