@@ -2,32 +2,13 @@ package com.supportiq.config;
 
 import org.springframework.context.annotation.Configuration;
 
-import org.springframework.context.annotation.Bean;
-import com.supportiq.service.RetrievalService;
-import com.supportiq.service.ResponseGenerator;
-import com.supportiq.service.EscalationService;
-
 @Configuration
 public class ApplicationConfig {
-
-    @Bean
-    public com.supportiq.service.HistoricalRetrievalService historicalRetrievalService(
-            @org.springframework.beans.factory.annotation.Value("${supportiq.csv.working:data/working/AmazonHelp/amazonhelp_relevant_tweets.csv}") String workingCsvPath,
-            @org.springframework.beans.factory.annotation.Value("${supportiq.mapping.base-dir:data/mapping/AmazonHelp}") String mappingBaseDir)
-            throws java.io.IOException {
-        return new com.supportiq.service.HistoricalRetrievalServiceImpl(workingCsvPath, mappingBaseDir);
-    }
-
-    @Bean
-    public RetrievalService retrievalService(
-            com.supportiq.service.HistoricalRetrievalService historicalRetrievalService) {
-        return new com.supportiq.service.RetrievalServiceImpl(historicalRetrievalService);
-    }
-
-    // ResponseGenerator is a Spring @Service (LlmResponseGenerator)
-    // So we don't need a @Bean for it if component scanning picks it up.
-    // However, to avoid conflicts, we can just remove the placeholder bean.
-
-    // EscalationService is a Spring @Service (EscalationServiceImpl)
-    // So we don't need a @Bean for it if component scanning picks it up.
+    // HistoricalRetriever is a @Service that reads from data/raw/twcs.csv + mapping files.
+    // LlmIntentClassifier is a @Service with supportiq.classifier.* config.
+    // LlmResponseGenerator is a @Service with supportiq.generator.* config.
+    // HumanSupportServiceImpl is a @Service with supportiq.human-support.* config.
+    // EscalationServiceImpl is a @Service but NOT used in customer flow.
+    // All services are auto-discovered by Spring component scanning.
 }
+

@@ -20,14 +20,40 @@ class GoldenDatasetTest {
         String header = lines.get(0);
         assertTrue(header.contains("example_id"));
         assertTrue(header.contains("source_tweet_id"));
-        assertTrue(header.contains("expected_intent"));
+        assertTrue(header.contains("human_gold_intent"));
         
         for (int i = 1; i < lines.size(); i++) {
-            String[] parts = lines.get(i).split(",", -1);
-            assertEquals(12, parts.length, "Row should have exactly 12 columns");
+            String[] parts = parseCsvLine(lines.get(i));
+            assertEquals(14, parts.length, "Row should have exactly 14 columns");
             assertFalse(parts[0].trim().isEmpty(), "example_id cannot be empty");
             assertFalse(parts[1].trim().isEmpty(), "source_tweet_id cannot be empty");
+            
+            // Check for customer_message
+            assertFalse(parts[2].trim().isEmpty(), "customer_message cannot be empty");
+            assertFalse(parts[2].contains("Mock message for"), "customer_message must not be synthetic");
+            
+            // Assert all gold truth is PENDING
+            assertEquals("PENDING", parts[3], "human_gold_intent must be PENDING");
+            assertEquals("PENDING", parts[4], "human_gold_subcategory must be PENDING");
         }
+    }
+    
+    private String[] parseCsvLine(String line) {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        boolean inQuotes = false;
+        StringBuilder sb = new StringBuilder();
+        for (char c : line.toCharArray()) {
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                result.add(sb.toString());
+                sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
+        }
+        result.add(sb.toString());
+        return result.toArray(new String[0]);
     }
     
     @Test

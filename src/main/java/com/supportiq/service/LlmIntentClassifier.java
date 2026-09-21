@@ -36,8 +36,14 @@ public class LlmIntentClassifier implements IntentClassifier {
             @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold,
             @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec,
             @Value("${supportiq.classifier.request-timeout-sec:30}") long requestTimeoutSec) {
-        this(apiUrl, System.getenv("SUPPORTIQ_AI_API_KEY"), model, confidenceThreshold, 
+        this(apiUrl, resolveApiKey(), model, confidenceThreshold, 
              HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(), requestTimeoutSec);
+    }
+
+    private static String resolveApiKey() {
+        String key = System.getenv("SUPPORTIQ_AI_CLASSIFIER_API_KEY");
+        if (key != null && !key.trim().isEmpty()) return key;
+        return System.getenv("SUPPORTIQ_AI_API_KEY");
     }
 
     // For testing

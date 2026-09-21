@@ -34,7 +34,7 @@ public class HistoricalRetriever {
     private TweetOffsetIndex offsetIndex;
 
     public HistoricalRetriever(
-            @Value("${supportiq.data.raw-csv:data/raw/twcs.csv}") String csvPathStr,
+            @Value("${supportiq.data.raw-csv:data/raw/twcs/twcs.csv}") String csvPathStr,
             @Value("${supportiq.data.mapping-dir:data/mapping/AmazonHelp}") String mappingBaseDir,
             @Value("${supportiq.retrieval.max-candidates:10}") int defaultMaxCandidates) {
         this.csvPath = Paths.get(csvPathStr);

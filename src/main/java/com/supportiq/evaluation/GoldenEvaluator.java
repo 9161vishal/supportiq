@@ -33,17 +33,17 @@ public class GoldenEvaluator {
         if (lines.size() > 1) {
             for (int i = 1; i < lines.size(); i++) {
                 String[] parts = parseCsvLine(lines.get(i));
-            if (parts.length < 12) continue;
+            if (parts.length < 14) continue;
             
             EvaluationExample ex = new EvaluationExample();
             ex.exampleId = parts[0];
             ex.sourceTweetId = parts[1];
-            ex.expectedIntent = parts[2];
-            ex.expectedSubcategory = parts[3];
-            ex.expectedDecision = parts[4];
-            ex.expectedReason = parts[5];
-            ex.humanResponseReference = parts[6];
-            ex.annotatorBIntent = parts[9];
+            ex.customerMessage = parts[2];
+            ex.expectedIntent = parts[3];
+            ex.expectedSubcategory = parts[4];
+            ex.expectedDecision = parts[5];
+            ex.expectedReason = parts[6];
+            ex.annotatorBIntent = parts[13];
             
             examples.add(ex);
             
@@ -122,14 +122,9 @@ public class GoldenEvaluator {
         int genSuccess = 0;
         int genFallback = 0;
         
-        // Let's get actual customer messages from working CSV
-        Map<String, CustomerMessage> messageMap = loadMessages("data/working/AmazonHelp/amazonhelp_relevant_tweets.csv");
-        
         for (EvaluationExample ex : examples) {
-            CustomerMessage msg = messageMap.get(ex.sourceTweetId);
-            if (msg == null) {
-                msg = new CustomerMessage("Mock message for " + ex.sourceTweetId);
-            }
+            CustomerMessage msg = new CustomerMessage(ex.customerMessage);
+
             
             // Baseline 2: Rule-Based
             var ruleIntent = ruleClassifier.classify(msg);
@@ -291,6 +286,7 @@ public class GoldenEvaluator {
     private static class EvaluationExample {
         String exampleId;
         String sourceTweetId;
+        String customerMessage;
         String expectedIntent;
         String expectedSubcategory;
         String expectedDecision;

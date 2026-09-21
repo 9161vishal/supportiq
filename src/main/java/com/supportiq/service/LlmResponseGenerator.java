@@ -42,9 +42,15 @@ public class LlmResponseGenerator implements ResponseGenerator {
             @Value("${supportiq.generator.relevance-threshold:0.7}") double relevanceThreshold,
             @Value("${supportiq.generator.connect-timeout-sec:10}") long connectTimeoutSec,
             @Value("${supportiq.generator.request-timeout-sec:30}") long requestTimeoutSec) {
-        this(apiUrl, System.getenv("SUPPORTIQ_AI_API_KEY"), model, relevanceThreshold,
+        this(apiUrl, resolveApiKey(), model, relevanceThreshold,
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(),
                 requestTimeoutSec);
+    }
+
+    private static String resolveApiKey() {
+        String key = System.getenv("SUPPORTIQ_AI_GENERATOR_API_KEY");
+        if (key != null && !key.trim().isEmpty()) return key;
+        return System.getenv("SUPPORTIQ_AI_API_KEY");
     }
 
     // For testing

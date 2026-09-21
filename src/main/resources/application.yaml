@@ -1,3 +1,33 @@
 spring:
   application:
     name: supportiq
+
+supportiq:
+  # AI #1 — Intent Classification
+  classifier:
+    api-url: https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent
+    model: gemini-3.6-flash
+    confidence-threshold: 0.6
+    connect-timeout-sec: 10
+    request-timeout-sec: 30
+
+  # AI #2 — Response Generation
+  generator:
+    api-url: https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent
+    model: gemini-3.6-flash
+    relevance-threshold: 0.7
+    connect-timeout-sec: 10
+    request-timeout-sec: 30
+
+  # Human Support Handoff
+  human-support:
+    message: "Human contact support is not integrated yet."
+
+  # Data Sources
+  data:
+    raw-csv: data/raw/twcs/twcs.csv
+    mapping-dir: data/mapping/AmazonHelp
+
+  # Retrieval
+  retrieval:
+    max-candidates: 20
