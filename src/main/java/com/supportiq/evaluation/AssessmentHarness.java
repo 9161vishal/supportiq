@@ -40,9 +40,6 @@ public class AssessmentHarness {
             rec.id = node.get("id").asText();
             rec.query = node.get("pair").get("query").asText();
             rec.humanAnswer = node.get("pair").get("humanAnswer").asText();
-            if (node.get("pair").has("expectedIntent")) {
-                rec.expectedIntent = node.get("pair").get("expectedIntent").asText();
-            }
             records.add(rec);
         }
         
@@ -58,18 +55,8 @@ public class AssessmentHarness {
         SupportAgentService agentService = context.getBean(SupportAgentService.class);
 
         String provider = context.getEnvironment().getProperty("supportiq.ai.provider", "gemini");
-        String model = context.getEnvironment().getProperty("supportiq.ai.model");
-        if (model == null || model.isEmpty()) {
-            model = "gemini-1.5-flash";
-        }
-        String apiUrl = context.getEnvironment().getProperty("supportiq.generator.api-url");
-        if (apiUrl == null || apiUrl.isEmpty() || apiUrl.contains("googleapis.com")) {
-            if ("groq".equalsIgnoreCase(provider)) {
-                apiUrl = "https://api.groq.com/openai/v1/chat/completions";
-            } else {
-                apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
-            }
-        }
+        String model = context.getEnvironment().getProperty("supportiq.ai.model", "gemini-3.6-flash");
+        String apiUrl = context.getEnvironment().getProperty("supportiq.generator.api-url", "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent");
         String apiKey = System.getenv("SUPPORTIQ_AI_API_KEY");
         
         boolean canRunLlm = apiKey != null && !apiKey.trim().isEmpty() && !apiKey.equals("dummy");
@@ -78,9 +65,6 @@ public class AssessmentHarness {
                 provider, apiUrl, apiKey, model, java.net.http.HttpClient.newBuilder().build(), 30, objectMapper);
 
         LlmJudge judge = new LlmJudge(aiProvider);
-        BaselineClassifier baselineClassifier = new BaselineClassifier();
-        BaselineRetriever baselineRetriever = new BaselineRetriever();
-        com.supportiq.service.HistoricalRetriever historicalRetriever = context.getBean(com.supportiq.service.HistoricalRetriever.class);
 
         int totalCount = records.size();
         int successEvaluated = 0;
@@ -93,63 +77,14 @@ public class AssessmentHarness {
         int scoredCases = 0;
         int totalScore = 0;
 
-        Map<String, Integer> tp = new HashMap<>();
-        Map<String, Integer> fp = new HashMap<>();
-        Map<String, Integer> fn = new HashMap<>();
-        Set<String> classesInGolden = new HashSet<>();
-
-        int baseline1Correct = 0;
-        int baseline1Valid = 0;
-        int baseline2Scored = 0;
-        int baseline2TotalScore = 0;
-
         for (GoldenRecord rec : records) {
-            if (rec.expectedIntent != null) classesInGolden.add(rec.expectedIntent);
-
-            // --- Baseline 1: Rule-based intent classifier ---
-            com.supportiq.model.Intent baseline1Intent = baselineClassifier.classify(rec.query);
-            if (rec.expectedIntent != null) {
-                baseline1Valid++;
-                String b1Actual = (baseline1Intent != null && baseline1Intent.getCategory() != null) ? baseline1Intent.getCategory().name() : "UNKNOWN";
-                if (rec.expectedIntent.equals(b1Actual)) {
-                    baseline1Correct++;
-                }
-            }
-
             CustomerMessage msg = new CustomerMessage(rec.query);
             AgentOutcome outcome = agentService.handleMessageWithOutcome(msg);
 
             String rType = outcome.getResponseType().name();
             responseTypeCounts.put(rType, responseTypeCounts.getOrDefault(rType, 0) + 1);
 
-            if (rec.expectedIntent != null) {
-                String actualIntent = (outcome.getIntent() != null && outcome.getIntent().getCategory() != null) 
-                        ? outcome.getIntent().getCategory().name() : "UNKNOWN";
-                if (rec.expectedIntent.equals(actualIntent)) {
-                    tp.put(rec.expectedIntent, tp.getOrDefault(rec.expectedIntent, 0) + 1);
-                } else {
-                    fn.put(rec.expectedIntent, fn.getOrDefault(rec.expectedIntent, 0) + 1);
-                    fp.put(actualIntent, fp.getOrDefault(actualIntent, 0) + 1);
-                }
-            }
-
             if (canRunLlm) {
-                // Baseline 2: Lexical retrieval
-                if (rec.expectedIntent != null && outcome.getIntent() != null) {
-                    try {
-                        List<com.supportiq.model.HistoricalCandidate> cands = historicalRetriever.retrieve(outcome.getIntent(), 20);
-                        String bestBase2 = baselineRetriever.retrieveBestResponse(rec.query, cands);
-                        if (bestBase2 != null) {
-                            AgentOutcome base2Outcome = new AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.AI_GENERATED, bestBase2, null, null);
-                            LlmJudge.JudgeResult b2Jr = judge.evaluate(rec.query, rec.humanAnswer, base2Outcome);
-                            if (b2Jr.success && b2Jr.semanticMatchScore != null) {
-                                baseline2Scored++;
-                                baseline2TotalScore += b2Jr.semanticMatchScore;
-                            }
-                        }
-                    } catch (Exception e) {}
-                }
-
                 LlmJudge.JudgeResult jr = judge.evaluate(rec.query, rec.humanAnswer, outcome);
                 if (!jr.success) {
                     judgeFailures++;
@@ -190,57 +125,6 @@ public class AssessmentHarness {
             summary.put("averageSemanticScore", (double) totalScore / scoredCases);
         }
 
-        int totalCorrect = 0;
-        int totalValidExpected = 0;
-        double macroPrecision = 0.0;
-        double macroRecall = 0.0;
-        double macroF1 = 0.0;
-
-        for (String c : classesInGolden) {
-            int tpc = tp.getOrDefault(c, 0);
-            int fpc = fp.getOrDefault(c, 0);
-            int fnc = fn.getOrDefault(c, 0);
-            
-            totalCorrect += tpc;
-            totalValidExpected += (tpc + fnc);
-            
-            double p = (tpc + fpc == 0) ? 0.0 : (double) tpc / (tpc + fpc);
-            double r = (tpc + fnc == 0) ? 0.0 : (double) tpc / (tpc + fnc);
-            double f1 = (p + r == 0.0) ? 0.0 : 2 * (p * r) / (p + r);
-            
-            macroPrecision += p;
-            macroRecall += r;
-            macroF1 += f1;
-        }
-
-        if (totalValidExpected > 0) {
-            Map<String, Double> intentMetrics = new HashMap<>();
-            intentMetrics.put("accuracy", (double) totalCorrect / totalValidExpected);
-            
-            int classCount = classesInGolden.size();
-            if (classCount > 0) {
-                intentMetrics.put("precision", macroPrecision / classCount);
-                intentMetrics.put("recall", macroRecall / classCount);
-                intentMetrics.put("f1", macroF1 / classCount);
-            }
-            summary.put("intentMetrics", intentMetrics);
-        }
-
-        // Add baselines and kappa
-        Map<String, Object> baselinesMap = new HashMap<>();
-        if (baseline1Valid > 0) {
-            baselinesMap.put("baseline1_intent_accuracy", (double) baseline1Correct / baseline1Valid);
-        }
-        if (baseline2Scored > 0) {
-            baselinesMap.put("baseline2_semantic_score", (double) baseline2TotalScore / baseline2Scored);
-        }
-        if (!baselinesMap.isEmpty()) {
-            summary.put("baselines", baselinesMap);
-        }
-
-        // Mock kappa calculation (pending second annotator)
-        summary.put("cohensKappa", 0.0); // Placeholder until actual annotator B data is integrated
-
         // Top 5 failures
         failures.sort(Comparator.comparingInt(f -> f.score));
         List<FailureMode> top5 = failures.subList(0, Math.min(5, failures.size()));
@@ -255,7 +139,6 @@ public class AssessmentHarness {
         String id;
         String query;
         String humanAnswer;
-        String expectedIntent;
     }
 
     public static class FailureMode {

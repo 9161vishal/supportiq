@@ -3,18 +3,8 @@
     "INVALID_OR_OUT_OF_CATEGORY" : 193
   },
   "top5Failures" : [ ],
-  "llmEvaluationSuccess" : 0,
+  "llmEvaluationSuccess" : 4,
   "llmEvaluationSkipped" : 0,
   "datasetCount" : 193,
-  "baselines" : {
-    "baseline1_intent_accuracy" : 0.29015544041450775
-  },
-  "judgeFailures" : 193,
-  "intentMetrics" : {
-    "precision" : 0.0,
-    "recall" : 0.0,
-    "accuracy" : 0.0,
-    "f1" : 0.0
-  },
-  "cohensKappa" : 0.0
+  "judgeFailures" : 189
 }
