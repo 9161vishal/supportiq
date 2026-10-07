@@ -8,8 +8,6 @@ import com.supportiq.model.HistoricalConversation;
 import com.supportiq.service.provider.AiProvider;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class LlmJudge {
 
@@ -25,7 +23,7 @@ public class LlmJudge {
         try {
             String prompt = buildPrompt(query, humanAnswer, outcome);
             String apiResponse = aiProvider.generateContent(prompt);
-            return parseResult(apiResponse);
+            return parseResult(apiResponse, outcome);
         } catch (Exception e) {
             return new JudgeResult(false, "API Failure: " + e.getMessage(), null, null, null, null);
         }
@@ -74,8 +72,8 @@ public class LlmJudge {
         sb.append("\nRULES:\n");
         sb.append("Return ONLY a valid JSON object matching this schema exactly:\n");
         sb.append("{\n");
-        sb.append("  \"responseType\": \"AI_GENERATED\",\n");
-        sb.append("  \"semanticMatchScore\": 92,\n"); // Score from 0 to 100, or null
+        sb.append("  \"responseType\": \"").append(outcome.getResponseType().name()).append("\",\n");
+        sb.append("  \"semanticMatchScore\": ").append(outcome.getResponseType() == AgentOutcome.ResponseType.AI_GENERATED ? "92" : "null").append(",\n");
         sb.append("  \"evidence\": \"summarize historical evidence used, or explain escalation/invalid basis\",\n");
         sb.append("  \"reason\": \"explanation of why score and responseType are appropriate\"\n");
         sb.append("}\n");
@@ -84,23 +82,84 @@ public class LlmJudge {
         return sb.toString();
     }
 
-    private JudgeResult parseResult(String responseBody) {
+    private JudgeResult parseResult(String responseBody, AgentOutcome outcome) {
         String content = responseBody.trim();
-        Matcher m = Pattern.compile("\\{.*\\}", Pattern.DOTALL).matcher(content);
-        if (m.find()) {
-            content = m.group(0);
+        if (content.startsWith("```json")) {
+            content = content.substring(7);
+            if (content.endsWith("```")) {
+                content = content.substring(0, content.length() - 3);
+            }
+        } else if (content.startsWith("```")) {
+            content = content.substring(3);
+            if (content.endsWith("```")) {
+                content = content.substring(0, content.length() - 3);
+            }
         }
+        content = content.trim();
 
         try {
             JsonNode result = objectMapper.readTree(content);
-            if (!result.has("responseType") || !result.has("evidence") || !result.has("reason")) {
+            if (!result.isObject()) {
+                return new JudgeResult(false, "Root is not a JSON object", null, null, null, null);
+            }
+            
+            if (result.size() != 4) {
+                return new JudgeResult(false, "Unexpected number of fields, expected exactly 4", null, null, null, null);
+            }
+            if (!result.has("responseType") || !result.has("semanticMatchScore") || !result.has("evidence") || !result.has("reason")) {
                 return new JudgeResult(false, "Missing required fields in JSON", null, null, null, null);
             }
 
-            String responseType = result.get("responseType").asText();
-            Integer semanticMatchScore = result.has("semanticMatchScore") && !result.get("semanticMatchScore").isNull() ? result.get("semanticMatchScore").asInt() : null;
-            String evidence = result.get("evidence").asText();
-            String reason = result.get("reason").asText();
+            JsonNode rtNode = result.get("responseType");
+            if (!rtNode.isTextual()) {
+                return new JudgeResult(false, "responseType must be a string", null, null, null, null);
+            }
+            String responseType = rtNode.asText();
+            
+            if (!responseType.equals(outcome.getResponseType().name())) {
+                return new JudgeResult(false, "responseType mismatch with actual AgentOutcome", null, null, null, null);
+            }
+
+            JsonNode scoreNode = result.get("semanticMatchScore");
+            Integer semanticMatchScore = null;
+            
+            if (!scoreNode.isNull()) {
+                if (!scoreNode.isInt()) {
+                    return new JudgeResult(false, "semanticMatchScore must be an integer or null", null, null, null, null);
+                }
+                semanticMatchScore = scoreNode.asInt();
+                if (semanticMatchScore < 0 || semanticMatchScore > 100) {
+                    return new JudgeResult(false, "semanticMatchScore must be between 0 and 100", null, null, null, null);
+                }
+            }
+
+            if (outcome.getResponseType() == AgentOutcome.ResponseType.AI_GENERATED) {
+                if (semanticMatchScore == null) {
+                    return new JudgeResult(false, "semanticMatchScore must not be null for AI_GENERATED", null, null, null, null);
+                }
+            } else {
+                if (semanticMatchScore != null) {
+                    return new JudgeResult(false, "semanticMatchScore must be null for non-AI_GENERATED", null, null, null, null);
+                }
+            }
+
+            JsonNode evNode = result.get("evidence");
+            if (!evNode.isTextual()) {
+                return new JudgeResult(false, "evidence must be a string", null, null, null, null);
+            }
+            String evidence = evNode.asText();
+            if (evidence == null || evidence.trim().isEmpty()) {
+                return new JudgeResult(false, "evidence cannot be blank", null, null, null, null);
+            }
+
+            JsonNode reNode = result.get("reason");
+            if (!reNode.isTextual()) {
+                return new JudgeResult(false, "reason must be a string", null, null, null, null);
+            }
+            String reason = reNode.asText();
+            if (reason == null || reason.trim().isEmpty()) {
+                return new JudgeResult(false, "reason cannot be blank", null, null, null, null);
+            }
 
             return new JudgeResult(true, "Success", responseType, semanticMatchScore, evidence, reason);
         } catch (Exception e) {
