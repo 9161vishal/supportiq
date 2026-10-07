@@ -54,14 +54,10 @@ public class GroqAiProviderTest {
 
     @Test
     void testGenerateContent() throws Exception {
-        GroqAiProvider provider = new GroqAiProvider("test-key", "openai/gpt-oss-20b", httpClient, 5, objectMapper) {
+        GroqAiProvider provider = new GroqAiProvider(apiUrl, "test-key", "openai/gpt-oss-20b", httpClient, 5, objectMapper) {
             @Override
             public String generateContent(String prompt) throws Exception {
-                // To test against our local server, we would normally pass apiUrl, but the class hardcodes the URL.
-                // For this test, we can just use reflection or a package-private constructor if available,
-                // but since we can't change the actual URL in the class easily without modifying the contract,
-                // let's use a specialized test version or rely on the class structure.
-                // Wait, GroqAiProvider hardcodes https://api.groq.com/openai/v1/chat/completions.
+                // To test against our local server, we just use the injected apiUrl
                 // Let's test the JSON extraction logic.
                 return super.generateContent(prompt);
             }

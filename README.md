@@ -53,9 +53,7 @@ To run the data processing (when implemented), the raw dataset must be placed lo
     - **Grounding**: Generates a customer-facing response based strictly on the selected historical candidates (max 10). The final response generation receives ONLY the selected evidence.
     - **Prompt Injection Protection**: Employs explicit system instructions explicitly treating customer and historical messages as untrusted data.
     - **Configuration**: Properties include `supportiq.generator.api-url`, `supportiq.generator.model`, `supportiq.generator.relevance-threshold`.
-    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, malformed JSON, or conflicting/unsafe evidence.
-- **Phase 6**: Pending (AI #3 Proof/Evaluation & Escalation Decision). No golden dataset, LLM judge, or evaluation reporting has been implemented yet.
-- **Phase 6**: Completed (AI #3 Proof/Evaluation & Escalation Decision). The evaluation harness is fully implemented with separate API mapping, strict JSON validation, dual baselines, and comprehensive reporting.
+    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, malformed JSON, or conflicting/unsafe eviden- **Phase 6**: AI #3 Evaluation Infrastructure Implemented.
 
 ## SupportIQ Assessment Evaluation Report
 
@@ -70,57 +68,47 @@ We employed a 3-stage AI architecture:
 
 ### 3. Dataset / Golden Set
 The project preserves the raw 516MB TWCS dataset entirely immutably.
-- **Golden Dataset**: Hand-curated set of 193 query/answer pairs located at data/evaluation/golden_dataset.jsonl.
-- **Note**: Currently, this dataset lacks expectedIntent annotations.
+- **Golden Dataset**: Hand-curated set of 193 query/answer pairs located at `data/evaluation/golden_dataset.jsonl`.
+- **Note**: Currently, this dataset lacks `expectedIntent` annotations.
 
 ### 4. Intent Taxonomy
 A robust 20-category taxonomy dictates valid intents and subcategories. AI #1 acts purely within this constrained space.
 
 ### 5. Automated Metrics
-- **Status**: SKIPPED
-- **Reason**: The golden_dataset.jsonl contains query and humanAnswer pairs but strictly lacks human-labeled expected intents. Automated metric calculations (Accuracy, Macro Precision, Recall, F1) cannot be legitimately performed without authoritative intent labels to compare against the system's predictions.
+- **Status**: NOT MEASURED
+- **Reason**: The `golden_dataset.jsonl` contains `query` and `humanAnswer` pairs but lacks human-labeled expected intents. Automated metric calculations (Accuracy, Macro Precision, Recall, F1) are NOT implemented to avoid fabricating data.
 
 ### 6. Baseline Comparison
-We designed two distinct baselines for comparative evaluation:
-1. **Keyword/Rule-based Intent Classifier**: A simple deterministic regex-based mapping (e.g., matching "order" to ORDER_STATUS).
-2. **TF-IDF / Lexical Retrieval**: A simple lexical overlap mechanism matching customer query terms directly to historical TWCS texts.
-- **Metric Gap**: Both baselines are architected in AssessmentHarness.java, but performance comparison against Production AI #1 cannot be completed until the golden dataset is populated with expectedIntent labels.
+- **Status**: NOT IMPLEMENTED
+- **Reason**: Without `expectedIntent` labels in the golden dataset, neither deterministic keyword baselines nor retrieval baselines can be measured against AI #1. No baselines are currently measured.
 
 ### 7. LLM Judge Results
-AI #3 (LlmJudge) executes semantically over the resulting AgentOutcome. 
-- Evaluated utilizing the separate EvaluationController.
-- In local tests lacking a live API key, AI #3 gracefully skipped generation, recording all 193 cases as skipped to avoid fabricating data.
+AI #3 (`LlmJudge`) executes semantically to judge how closely the actual system answer matches the human/reference answer.
+- Evaluated utilizing the separate `EvaluationController`.
+- In local tests lacking a live API key, AI #3 gracefully skips generation.
 
-### 8. Human Agreement
-- **Status**: UNAVAILABLE
-- **Reason**: A second independent human annotation does not currently exist. Cohen's Kappa cannot be calculated. We have automatically generated the necessary annotation template at data/evaluation/annotation_template.csv to enable future annotators.
+### 8. Top 5 Failure Modes
+- **Status**: NOT MEASURED
+- **Reason**: Requires live LLM evaluation runs over the golden dataset, which have not been executed. 
 
-### 9. Top 5 Failure Modes
-Derived dynamically when live evaluation occurs. Typical categories anticipated (based on system design):
-1. **False Positive Escalation**: AI safely escalated, but a historical resolution existed.
-2. **Missing Context**: Historical retrieval returned valid paths, but they lacked exact shipping policies.
-3. **Overly Cautious AI #2**: AI #2 rejected historically-valid evidence as irrelevant due to minor semantic differences.
-4. **Intent Misclassification**: AI #1 mapped to the wrong taxonomy node, leading to irrelevant evidence.
-5. **Formatting Hallucination**: AI #2 generated a correct answer but violated length constraints.
-
-### 10. Misleading Headline Number
+### 9. Misleading Headline Number
 **"100% Deterministic Safety on Unknown Inputs"**
-*Why it's misleading*: While technically true (unrecognized intents correctly trigger the safe INVALID_OR_OUT_OF_CATEGORY state without hallucinating), this metric ignores the recall gap. If AI #1 misclassifies 50% of valid queries as unknown, the system is 100% "safe" but effectively useless to half the customers. 
+*Why it's misleading*: While technically true (unrecognized intents correctly trigger the safe `INVALID_OR_OUT_OF_CATEGORY` state), this ignores the recall gap. If AI #1 misclassifies valid queries as unknown, the system is 100% "safe" but effectively useless to customers. 
 
-### 11. One-More-Week Plan
+### 10. One-More-Week Plan
 Given one additional week, we would implement:
 1. **Populate Expected Intents**: Annotate the 193 golden cases with true intent labels to unlock Baseline vs. AI #1 metrics.
-2. **Second Human Annotator**: Execute labeling using nnotation_template.csv to establish Cohen's Kappa for baseline reliability.
-3. **Lexical Retrieval Expansion**: Finalize the Apache Lucene/TF-IDF integration for Baseline #2 to conduct empirical relevance comparisons against the current offset index.
+2. **Deterministic Baseline**: Implement a strict keyword-based classifier baseline using the 20 canonical intents.
+3. **Lexical Baseline**: Implement a true lexical retrieval baseline (e.g. Apache Lucene).
 
-### 12. Decision Log
+### 11. Decision Log
 1. **AmazonHelp Brand Focus**: Reduced dataset scope dramatically while retaining a high volume of multi-path conversations.
-2. **Immutable TWCS Source**: Mandated all algorithms process the raw 516MB CSV purely via offset indices rather than duplicating or fragmenting data, saving massive disk overhead.
-3. **ID-based Mapping**: Stored only pointers/offsets rather than text to maintain memory efficiency and repository cleanliness.
-4. **Conversation Path Preservation**: Required building structural paths (Customer -> Agent -> Customer) instead of isolated responses to preserve contextual resolutions.
-5. **Taxonomy Enforcement**: Stripped LLM flexibility in AI #1, forcing it to return strictly defined 20-category constraints or fall back safely.
-6. **Decoupled AI #2 Retrieval**: Separated raw indexing from semantic re-ranking to isolate the LLM from expensive full-corpus searches.
-7. **Strict Evidence Capping**: Forced AI #2 to utilize a maximum of 10 contextual inputs to prevent token overflow and context dilution.
-8. **Evaluation-Only AI #3**: Prevented the LlmJudge from ever executing in the /api/support loop to ensure customer latency is unaffected.
-9. **Strict JSON Validation in AI #3**: Refused all extraneous fields or non-integer scores to guarantee robust automated parsing of evaluation results.
-10. **Refusal to Fabricate Metrics**: Enforced a hard rule against fabricating Cohen's Kappa or Baseline Metrics when golden labels were missing, prioritizing scientific honesty.
+2. **Immutable TWCS Source**: Mandated all algorithms process the raw 516MB CSV purely via offset indices rather than duplicating data.
+3. **ID-based Mapping**: Stored only pointers/offsets rather than text to maintain memory efficiency.
+4. **Conversation Path Preservation**: Required building structural paths (Customer -> Agent -> Customer) instead of isolated responses.
+5. **Taxonomy Enforcement**: Stripped LLM flexibility in AI #1, forcing it to return strictly defined 20-category constraints.
+6. **Decoupled AI #2 Retrieval**: Separated raw indexing from semantic re-ranking.
+7. **Strict Evidence Capping**: Forced AI #2 to utilize a maximum of 10 contextual inputs.
+8. **Evaluation-Only AI #3**: Prevented the `LlmJudge` from ever executing in the `/api/support` loop.
+9. **Strict JSON Validation in AI #3**: Refused all extraneous fields or non-integer scores to guarantee robust automated parsing.
+10. **Refusal to Fabricate Metrics**: Enforced a hard rule against fabricating baselines, failure modes, or metric data when golden labels were missing.

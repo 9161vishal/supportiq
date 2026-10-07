@@ -33,4 +33,14 @@ class AssessmentHarnessTest {
         Path newCsvPath = Paths.get("data/evaluation/twcs.csv");
         assertFalse(Files.exists(newCsvPath), "Must not duplicate raw dataset");
     }
+
+    @Test
+    void testNonWebStartup() throws Exception {
+        Path harnessPath = Paths.get("src/main/java/com/supportiq/evaluation/AssessmentHarness.java");
+        if (Files.exists(harnessPath)) {
+            String content = Files.readString(harnessPath);
+            assertTrue(content.contains("WebApplicationType.NONE"), 
+                "AssessmentHarness must set WebApplicationType.NONE to avoid port 8080 conflicts");
+        }
+    }
 }

@@ -64,35 +64,32 @@ public class EvaluationController {
 
     @PostMapping("/judge")
     public ResponseEntity<?> judge(@RequestBody Map<String, Object> request) {
-        boolean hasQuery = request.containsKey("query") && request.get("query") != null && !((String)request.get("query")).trim().isEmpty();
-        boolean hasHumanAnswer = request.containsKey("humanAnswer") && request.get("humanAnswer") != null && !((String)request.get("humanAnswer")).trim().isEmpty();
-        boolean hasGoldenCaseId = request.containsKey("goldenCaseId") && request.get("goldenCaseId") != null && !((String)request.get("goldenCaseId")).trim().isEmpty();
-
-        if (hasGoldenCaseId && (hasQuery || hasHumanAnswer)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Cannot supply both goldenCaseId and query/humanAnswer"));
-        }
-        
-        if (!hasGoldenCaseId && (!hasQuery || !hasHumanAnswer)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Must supply either goldenCaseId OR both query and humanAnswer"));
-        }
-
-        String query;
-        String humanAnswer;
-
-        if (hasGoldenCaseId) {
-            String goldenCaseId = (String) request.get("goldenCaseId");
-            String[] pair = findGoldenPair(goldenCaseId);
-            if (pair == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Golden case ID not found"));
-            }
-            query = pair[0];
-            humanAnswer = pair[1];
-        } else {
-            query = (String) request.get("query");
-            humanAnswer = (String) request.get("humanAnswer");
-        }
-
         try {
+            String query = extractString(request, "query");
+            String humanAnswer = extractString(request, "humanAnswer");
+            String goldenCaseId = extractString(request, "goldenCaseId");
+
+            boolean hasQuery = query != null;
+            boolean hasHumanAnswer = humanAnswer != null;
+            boolean hasGoldenCaseId = goldenCaseId != null;
+
+            if (hasGoldenCaseId && (hasQuery || hasHumanAnswer)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Cannot supply both goldenCaseId and query/humanAnswer"));
+            }
+            
+            if (!hasGoldenCaseId && (!hasQuery || !hasHumanAnswer)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Must supply either goldenCaseId OR both query and humanAnswer"));
+            }
+
+            if (hasGoldenCaseId) {
+                String[] pair = findGoldenPair(goldenCaseId);
+                if (pair == null) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Golden case ID not found"));
+                }
+                query = pair[0];
+                humanAnswer = pair[1];
+            }
+
             CustomerMessage msg = new CustomerMessage(query);
             AgentOutcome outcome = supportAgentService.handleMessageWithOutcome(msg);
             LlmJudge.JudgeResult jr = llmJudge.evaluate(query, humanAnswer, outcome);
@@ -109,9 +106,26 @@ public class EvaluationController {
             
             return ResponseEntity.ok(response);
             
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal error: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal error occurred."));
         }
+    }
+
+    private String extractString(Map<String, Object> request, String key) {
+        if (!request.containsKey(key) || request.get(key) == null) {
+            return null;
+        }
+        Object val = request.get(key);
+        if (!(val instanceof String)) {
+            throw new IllegalArgumentException("Field '" + key + "' must be a string");
+        }
+        String str = (String) val;
+        if (str.trim().isEmpty()) {
+            throw new IllegalArgumentException("Field '" + key + "' cannot be blank");
+        }
+        return str;
     }
 
     private String[] findGoldenPair(String goldenCaseId) {

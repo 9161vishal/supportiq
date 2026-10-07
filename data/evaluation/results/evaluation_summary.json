@@ -1,0 +1,17 @@
+{
+  "responseTypeDistribution" : {
+    "INVALID_OR_OUT_OF_CATEGORY" : 190,
+    "HUMAN_ESCALATION" : 2,
+    "AI_GENERATED" : 1
+  },
+  "top5Failures" : [ ],
+  "llmEvaluationSuccess" : 34,
+  "llmEvaluationSkipped" : 0,
+  "datasetCount" : 193,
+  "baselines" : {
+    "reason" : "Baselines are not measured because 'expectedIntent' labels are entirely missing from golden_dataset.jsonl.",
+    "status" : "NOT IMPLEMENTED"
+  },
+  "missingIntentLabels" : true,
+  "judgeFailures" : 159
+}

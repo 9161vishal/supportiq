@@ -14,13 +14,15 @@ import java.util.Map;
 
 public class GroqAiProvider implements AiProvider {
 
+    private final String apiUrl;
     private final String apiKey;
     private final String model;
     private final HttpClient httpClient;
     private final long requestTimeoutSec;
     private final ObjectMapper objectMapper;
 
-    public GroqAiProvider(String apiKey, String model, HttpClient httpClient, long requestTimeoutSec, ObjectMapper objectMapper) {
+    public GroqAiProvider(String apiUrl, String apiKey, String model, HttpClient httpClient, long requestTimeoutSec, ObjectMapper objectMapper) {
+        this.apiUrl = (apiUrl != null && !apiUrl.trim().isEmpty()) ? apiUrl : "https://api.groq.com/openai/v1/chat/completions";
         this.apiKey = apiKey;
         this.model = model;
         this.httpClient = httpClient;
@@ -45,7 +47,7 @@ public class GroqAiProvider implements AiProvider {
         String jsonBody = objectMapper.writeValueAsString(requestBody);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.groq.com/openai/v1/chat/completions"))
+                .uri(URI.create(apiUrl))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))

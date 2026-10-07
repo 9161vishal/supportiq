@@ -133,4 +133,17 @@ class EvaluationControllerTest {
         ResponseEntity<?> resp = controller.judge(req);
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
     }
+
+    @Test
+    void test11_WrongJsonType() {
+        Map<String, Object> req = new HashMap<>();
+        req.put("query", 12345); // Not a string
+        req.put("humanAnswer", "It is shipped.");
+        ResponseEntity<?> resp = controller.judge(req);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        
+        Map<String, Object> body = (Map<String, Object>) resp.getBody();
+        assertTrue(body.containsKey("error"));
+        assertTrue(body.get("error").toString().contains("must be a string"));
+    }
 }
