@@ -34,7 +34,7 @@ public class LlmResponseGenerator implements ResponseGenerator {
     public LlmResponseGenerator(
             @Value("${supportiq.ai.provider:gemini}") String provider,
             @Value("${supportiq.ai.model:#{null}}") String globalModel,
-            @Value("${supportiq.generator.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
+            @Value("${supportiq.ai.api-url:${supportiq.generator.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}}") String apiUrl,
             @Value("${supportiq.generator.model:gemini-3.6-flash}") String model,
             @Value("${supportiq.generator.relevance-threshold:0.7}") double relevanceThreshold,
             @Value("${supportiq.generator.connect-timeout-sec:10}") long connectTimeoutSec,
@@ -79,6 +79,7 @@ public class LlmResponseGenerator implements ResponseGenerator {
         }
 
         try {
+            System.out.println("DIAGNOSTIC: AI #2 START");
             // STEP 1: Selection
             String selectionPrompt = buildSelectionPrompt(message.getText(), intent, evidence.getHistoricalCases());
             String selectionResponseContent = aiProvider.generateContent(selectionPrompt);
@@ -87,16 +88,20 @@ public class LlmResponseGenerator implements ResponseGenerator {
             RetrievedEvidence actualSelectedEvidence = new RetrievedEvidence(selectedCandidates);
 
             if (selectedCandidates.isEmpty()) {
+                System.out.println("DIAGNOSTIC: AI #2 failure/fallback -> no selected candidates");
                 return new GenerationResult(FALLBACK_RESPONSE, actualSelectedEvidence);
             }
 
             // STEP 2: Grounded Response Generation
             String generationPrompt = buildGenerationPrompt(message.getText(), intent, selectedCandidates);
             String generationResponseContent = aiProvider.generateContent(generationPrompt);
-            return new GenerationResult(parseAndValidateGeneration(generationResponseContent), actualSelectedEvidence);
+            String parsedGen = parseAndValidateGeneration(generationResponseContent);
+            System.out.println("DIAGNOSTIC: AI #2 response: " + parsedGen);
+            return new GenerationResult(parsedGen, actualSelectedEvidence);
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
+            System.out.println("DIAGNOSTIC: AI #2 failure/fallback -> Exception: " + e.getMessage());
             System.err.println("AI response generation failed: " + e.getMessage());
             return new GenerationResult(FALLBACK_RESPONSE, evidence);
         }

@@ -51,4 +51,40 @@ public class AiProviderFactoryTest {
         
         assertEquals("Unsupported AI provider: invalid", exception.getMessage());
     }
+
+    @Test
+    void testGroqProviderDefaultUrlResolution() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // Pass the Gemini default URL explicitly to simulate the regression scenario
+        String geminiDefault = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
+        AiProvider provider = AiProviderFactory.create("groq", geminiDefault, "key", "model", client, 10, mapper);
+        
+        assertTrue(provider instanceof GroqAiProvider);
+        
+        java.lang.reflect.Field urlField = GroqAiProvider.class.getDeclaredField("apiUrl");
+        urlField.setAccessible(true);
+        String actualUrl = (String) urlField.get(provider);
+        
+        assertEquals("https://api.groq.com/openai/v1/chat/completions", actualUrl);
+    }
+
+    @Test
+    void testGeminiProviderDefaultUrlResolution() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // Pass the Groq default URL explicitly to simulate the inverse scenario
+        String groqDefault = "https://api.groq.com/openai/v1/chat/completions";
+        AiProvider provider = AiProviderFactory.create("gemini", groqDefault, "key", "model", client, 10, mapper);
+        
+        assertTrue(provider instanceof GeminiAiProvider);
+        
+        java.lang.reflect.Field urlField = GeminiAiProvider.class.getDeclaredField("apiUrl");
+        urlField.setAccessible(true);
+        String actualUrl = (String) urlField.get(provider);
+        
+        assertEquals("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent", actualUrl);
+    }
 }

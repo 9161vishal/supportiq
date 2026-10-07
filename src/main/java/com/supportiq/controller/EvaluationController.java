@@ -37,7 +37,7 @@ public class EvaluationController {
             SupportAgentService supportAgentService,
             @Value("${supportiq.ai.provider:gemini}") String provider,
             @Value("${supportiq.ai.model:}") String model,
-            @Value("${supportiq.generator.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl
+            @Value("${supportiq.ai.api-url:}") String apiUrl
     ) {
         this.supportAgentService = supportAgentService;
         this.objectMapper = new ObjectMapper();
@@ -48,6 +48,8 @@ public class EvaluationController {
         }
         
         String finalModel = (model != null && !model.trim().isEmpty()) ? model : "gemini-3.6-flash";
+
+        // URL fallback is now handled centrally in AiProviderFactory.
 
         AiProvider aiProvider = AiProviderFactory.create(
                 provider, apiUrl, apiKey, finalModel, HttpClient.newBuilder().build(), 30, this.objectMapper
@@ -91,9 +93,12 @@ public class EvaluationController {
             }
 
             CustomerMessage msg = new CustomerMessage(query);
+            System.out.println("DIAGNOSTIC: AI #3 /api/evaluation/judge requested");
             AgentOutcome outcome = supportAgentService.handleMessageWithOutcome(msg);
+            
+            System.out.println("DIAGNOSTIC: AI #3 calling LlmJudge");
             LlmJudge.JudgeResult jr = llmJudge.evaluate(query, humanAnswer, outcome);
-
+            System.out.println("DIAGNOSTIC: AI #3 final judge result -> Success: " + jr.success + ", ResponseType: " + jr.responseType + ", Reason: " + jr.reason);
             if (!jr.success) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "Evaluation failed: " + jr.statusMessage));
             }

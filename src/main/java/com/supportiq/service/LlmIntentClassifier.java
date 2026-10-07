@@ -24,7 +24,7 @@ public class LlmIntentClassifier implements IntentClassifier {
     public LlmIntentClassifier(
             @Value("${supportiq.ai.provider:gemini}") String provider,
             @Value("${supportiq.ai.model:#{null}}") String globalModel,
-            @Value("${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
+            @Value("${supportiq.ai.api-url:${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}}") String apiUrl,
             @Value("${supportiq.classifier.model:gemini-3.6-flash}") String model,
             @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold,
             @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec,
@@ -61,9 +61,13 @@ public class LlmIntentClassifier implements IntentClassifier {
             return new Intent(null, null, 0.0, true);
         }
         try {
+            System.out.println("DIAGNOSTIC: AI #1 START");
             String prompt = buildPrompt(message.getText());
             String content = aiProvider.generateContent(prompt);
-            return parseResponse(content);
+            System.out.println("DIAGNOSTIC: AI #1 raw response: " + content);
+            Intent result = parseResponse(content);
+            System.out.println("DIAGNOSTIC: AI #1 parsed result -> Category: " + result.getCategory() + ", Subcategory: " + result.getSubCategory() + ", Confidence: " + result.getConfidence() + ", Uncertain: " + result.isUncertain());
+            return result;
         } catch (IllegalStateException e) {
             // Fail fast for permanent configuration errors like 404
             throw e;

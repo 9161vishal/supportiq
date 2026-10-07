@@ -65,6 +65,8 @@ public class SupportAgentService {
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, "Please provide a message so I can assist you.", null, null);
         }
 
+        System.out.println("DIAGNOSTIC: Incoming customer message: " + message.getText());
+
         // 2. Call AI #1 — Intent Classification
         Intent intent;
         try {
@@ -78,37 +80,46 @@ public class SupportAgentService {
 
         // 3a. Check for null/invalid AI output
         if (intent == null || intent.getCategory() == null) {
+            System.out.println("DIAGNOSTIC: Decision layer -> null/invalid intent");
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, CLARIFICATION_RESPONSE, null, "Null/invalid intent");
         }
 
         // 3b. Check uncertain intent → clarification (do NOT call AI #2)
         if (intent.isUncertain()) {
+            System.out.println("DIAGNOSTIC: Decision layer -> Uncertain intent -> CLARIFICATION");
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, CLARIFICATION_RESPONSE, null, "Uncertain intent");
         }
 
         // 3c. Check high-risk/security cases → human support (do NOT call AI #2)
         if (isHighRisk(intent)) {
+            System.out.println("DIAGNOSTIC: Decision layer -> High risk -> HUMAN_ESCALATION");
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, humanSupportService.getHandoffMessage(), null, "High-risk category/subcategory");
         }
 
         // 3d. Check non-support/general information → safe direct response (do NOT call
         // AI #2)
         if (intent.getCategory() == IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT) {
+            System.out.println("DIAGNOSTIC: Decision layer -> Non-support -> INVALID_OR_OUT_OF_CATEGORY");
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, NON_SUPPORT_RESPONSE, null, "Non-support category");
         }
+
+        System.out.println("DIAGNOSTIC: Decision layer -> Proceeding to retrieval");
 
         // 4. Self-handle path: Retrieve historical evidence + AI #2
 
         // 4a. Retrieve historical evidence using raw CSV + ID mappings
         List<HistoricalCandidate> candidates;
         try {
+            System.out.println("DIAGNOSTIC: Calling Historical Retrieval");
             candidates = historicalRetriever.retrieve(intent, 20);
+            System.out.println("DIAGNOSTIC: Candidate count: " + (candidates != null ? candidates.size() : "null"));
         } catch (Exception e) {
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, SAFE_ERROR_RESPONSE, null, "Retrieval Failure");
         }
 
         if (candidates == null || candidates.isEmpty()) {
             // No usable historical evidence — cannot fabricate an answer
+            System.out.println("DIAGNOSTIC: Retrieval -> No usable historical evidence");
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, humanSupportService.getHandoffMessage(), null, "No historical evidence");
         }
 
@@ -134,9 +145,11 @@ public class SupportAgentService {
 
         // 4c. Check if AI #2 returned its fallback (meaning it couldn't generate)
         if (LlmResponseGenerator.FALLBACK_RESPONSE.equals(genResult.response)) {
+            System.out.println("DIAGNOSTIC: Final AgentOutcome: HUMAN_ESCALATION, AI #2 returned fallback, Evidence exists: " + (genResult.selectedEvidence != null && !genResult.selectedEvidence.getHistoricalCases().isEmpty()));
             return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, humanSupportService.getHandoffMessage(), genResult.selectedEvidence, "AI #2 returned fallback");
         }
 
+        System.out.println("DIAGNOSTIC: Final AgentOutcome: AI_GENERATED, Evidence exists: " + (genResult.selectedEvidence != null && !genResult.selectedEvidence.getHistoricalCases().isEmpty()));
         return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.AI_GENERATED, genResult.response, genResult.selectedEvidence, null);
     }
 
