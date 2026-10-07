@@ -70,13 +70,6 @@ public class SupportAgentService {
             return SAFE_ERROR_RESPONSE;
         }
 
-        System.out.println("========== AI #1 RESULT ==========");
-        System.out.println("Category     : " + (intent != null ? intent.getCategory() : "null"));
-        System.out.println("Subcategory  : " + (intent != null ? intent.getSubCategory() : "null"));
-        System.out.println("Confidence   : " + (intent != null ? intent.getConfidence() : "null"));
-        System.out.println("Uncertain    : " + (intent != null ? intent.isUncertain() : "null"));
-        System.out.println("==================================");
-
         // 3. Evaluate AI #1 result through Decision/Safety layer
 
         // 3a. Check for null/invalid AI output
@@ -90,9 +83,6 @@ public class SupportAgentService {
         }
 
         // 3c. Check high-risk/security cases → human support (do NOT call AI #2)
-        System.out.println("========== SAFETY CHECK ==========");
-        System.out.println("High Risk    : " + isHighRisk(intent));
-        System.out.println("==================================");
         if (isHighRisk(intent)) {
             return humanSupportService.getHandoffMessage();
         }
@@ -112,10 +102,6 @@ public class SupportAgentService {
         } catch (Exception e) {
             return SAFE_ERROR_RESPONSE;
         }
-
-        System.out.println("========== RETRIEVAL RESULT ==========");
-        System.out.println("Candidates   : " + (candidates != null ? candidates.size() : "null"));
-        System.out.println("=======================================");
 
         if (candidates == null || candidates.isEmpty()) {
             // No usable historical evidence — cannot fabricate an answer
@@ -141,10 +127,6 @@ public class SupportAgentService {
             // AI #2 provider failure → safe customer-facing response
             return SAFE_ERROR_RESPONSE;
         }
-
-        System.out.println("========== AI #2 RESULT ==========");
-        System.out.println("Fallback     : " + LlmResponseGenerator.FALLBACK_RESPONSE.equals(response));
-        System.out.println("==================================");
 
         // 4c. Check if AI #2 returned its fallback (meaning it couldn't generate)
         if (LlmResponseGenerator.FALLBACK_RESPONSE.equals(response)) {
