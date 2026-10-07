@@ -7,13 +7,12 @@ import com.supportiq.model.CustomerMessage;
 import com.supportiq.model.HistoricalConversation;
 import com.supportiq.model.Intent;
 import com.supportiq.model.RetrievedEvidence;
+import com.supportiq.service.provider.AiProvider;
+import com.supportiq.service.provider.AiProviderFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,27 +23,30 @@ import java.util.stream.Collectors;
 @Service
 public class LlmResponseGenerator implements ResponseGenerator {
 
-    private final String apiUrl;
-    private final String apiKey;
-    private final String model;
     private final double relevanceThreshold;
-    private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    private final long requestTimeoutSec;
+    private final AiProvider aiProvider;
 
     public static final String FALLBACK_RESPONSE = "I'm sorry, but I am unable to resolve this issue right now. I'll connect you with a live agent to help you further.";
     public static final int MAX_RELEVANT_EVIDENCE = 10;
 
     @org.springframework.beans.factory.annotation.Autowired
     public LlmResponseGenerator(
+            @Value("${supportiq.ai.provider:gemini}") String provider,
+            @Value("${supportiq.ai.model:#{null}}") String globalModel,
             @Value("${supportiq.generator.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
             @Value("${supportiq.generator.model:gemini-3.6-flash}") String model,
             @Value("${supportiq.generator.relevance-threshold:0.7}") double relevanceThreshold,
             @Value("${supportiq.generator.connect-timeout-sec:10}") long connectTimeoutSec,
             @Value("${supportiq.generator.request-timeout-sec:30}") long requestTimeoutSec) {
-        this(apiUrl, resolveApiKey(), model, relevanceThreshold,
+        this(provider, apiUrl, resolveApiKey(), (globalModel != null && !globalModel.trim().isEmpty()) ? globalModel : model, relevanceThreshold,
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(),
                 requestTimeoutSec);
+    }
+
+    // Legacy constructor for compatibility
+    public LlmResponseGenerator(String apiUrl, String model, double relevanceThreshold, long connectTimeoutSec, long requestTimeoutSec) {
+        this("gemini", null, apiUrl, model, relevanceThreshold, connectTimeoutSec, requestTimeoutSec);
     }
 
     private static String resolveApiKey() {
@@ -56,23 +58,20 @@ public class LlmResponseGenerator implements ResponseGenerator {
     // For testing
     LlmResponseGenerator(String apiUrl, String apiKey, String model, double relevanceThreshold, HttpClient httpClient,
             long requestTimeoutSec) {
-        this.apiUrl = apiUrl;
-        this.apiKey = apiKey;
-        this.model = model;
+        this("gemini", apiUrl, apiKey, model, relevanceThreshold, httpClient, requestTimeoutSec);
+    }
+
+    LlmResponseGenerator(String provider, String apiUrl, String apiKey, String model, double relevanceThreshold, HttpClient httpClient,
+            long requestTimeoutSec) {
         this.relevanceThreshold = relevanceThreshold;
-        this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper();
-        this.requestTimeoutSec = requestTimeoutSec;
+        this.aiProvider = AiProviderFactory.create(provider, apiUrl, apiKey, model, httpClient, requestTimeoutSec, this.objectMapper);
     }
 
     @Override
     public String generateResponse(CustomerMessage message, Intent intent, RetrievedEvidence evidence) {
         if (message == null || message.getText() == null || message.getText().trim().isEmpty()) {
             return FALLBACK_RESPONSE;
-        }
-
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalStateException("AI API key is not configured.");
         }
 
         if (evidence == null || evidence.getHistoricalCases() == null || evidence.getHistoricalCases().isEmpty()) {
@@ -82,8 +81,8 @@ public class LlmResponseGenerator implements ResponseGenerator {
         try {
             // STEP 1: Selection
             String selectionPrompt = buildSelectionPrompt(message.getText(), intent, evidence.getHistoricalCases());
-            String selectionResponseBody = callLlmApi(selectionPrompt);
-            List<HistoricalConversation> selectedCandidates = parseAndValidateSelection(selectionResponseBody, intent, evidence.getHistoricalCases());
+            String selectionResponseContent = aiProvider.generateContent(selectionPrompt);
+            List<HistoricalConversation> selectedCandidates = parseAndValidateSelection(selectionResponseContent, intent, evidence.getHistoricalCases());
 
             if (selectedCandidates.isEmpty()) {
                 return FALLBACK_RESPONSE;
@@ -91,8 +90,8 @@ public class LlmResponseGenerator implements ResponseGenerator {
 
             // STEP 2: Grounded Response Generation
             String generationPrompt = buildGenerationPrompt(message.getText(), intent, selectedCandidates);
-            String generationResponseBody = callLlmApi(generationPrompt);
-            return parseAndValidateGeneration(generationResponseBody);
+            String generationResponseContent = aiProvider.generateContent(generationPrompt);
+            return parseAndValidateGeneration(generationResponseContent);
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
@@ -189,76 +188,12 @@ public class LlmResponseGenerator implements ResponseGenerator {
         return sb.toString();
     }
 
-    private String callLlmApi(String prompt) throws Exception {
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("systemInstruction",
-                Map.of("parts", List.of(Map.of("text", "You are a helpful assistant that outputs only valid JSON."))));
-
-        Map<String, Object> content = new HashMap<>();
-        content.put("parts", List.of(Map.of("text", prompt)));
-        requestBody.put("contents", List.of(content));
-
-        Map<String, Object> genConfig = new HashMap<>();
-        genConfig.put("temperature", 0.0);
-        genConfig.put("responseMimeType", "application/json");
-        requestBody.put("generationConfig", genConfig);
-
-        String jsonBody = objectMapper.writeValueAsString(requestBody);
-        String finalUrl = String.format(apiUrl, model);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(finalUrl))
-                .header("Content-Type", "application/json")
-                .header("x-goog-api-key", apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .timeout(Duration.ofSeconds(requestTimeoutSec))
-                .build();
-
-        int maxRetries = 3;
-        int delayMs = 1000;
-
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            HttpResponse<String> response;
-            try {
-                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            } catch (java.net.http.HttpTimeoutException e) {
-                if (attempt == maxRetries) {
-                    throw new RuntimeException("AI provider timeout after " + maxRetries + " attempts.");
-                }
-                Thread.sleep(delayMs);
-                delayMs *= 2;
-                continue;
-            }
-
-            int code = response.statusCode();
-            if (code == 200) {
-                return response.body();
-            } else if (code == 429 || code >= 500) {
-                if (attempt == maxRetries) {
-                    throw new RuntimeException("AI provider call failed with HTTP " + code);
-                }
-                Thread.sleep(delayMs);
-                delayMs *= 2;
-            } else if (code == 404) {
-                throw new IllegalStateException("AI provider model not found (HTTP 404).");
-            } else if (code == 401 || code == 403) {
-                throw new IllegalStateException("AI provider authentication failed (HTTP " + code + ").");
-            } else {
-                throw new RuntimeException("AI provider call failed with HTTP " + code);
-            }
-        }
-        throw new RuntimeException("AI request failed.");
-    }
-
-    private String extractJsonContent(String responseBody) throws Exception {
-        JsonNode rootNode = objectMapper.readTree(responseBody);
-        JsonNode messageNode = rootNode.path("candidates").path(0).path("content").path("parts").path(0).path("text");
-
-        if (messageNode.isMissingNode()) {
-            throw new RuntimeException("Malformed API response: missing candidates[0].content.parts[0].text");
+    private String extractJsonContent(String content) throws Exception {
+        if (content == null || content.trim().isEmpty()) {
+            throw new RuntimeException("Empty response content");
         }
 
-        String content = messageNode.asText().trim();
+        content = content.trim();
         if (content.startsWith("```json")) {
             content = content.substring(7);
             if (content.endsWith("```")) {
@@ -273,8 +208,8 @@ public class LlmResponseGenerator implements ResponseGenerator {
         return content.trim();
     }
 
-    private List<HistoricalConversation> parseAndValidateSelection(String responseBody, Intent intent, List<HistoricalConversation> candidates) throws Exception {
-        String content = extractJsonContent(responseBody);
+    private List<HistoricalConversation> parseAndValidateSelection(String responseContent, Intent intent, List<HistoricalConversation> candidates) throws Exception {
+        String content = extractJsonContent(responseContent);
         JsonNode resultNode = objectMapper.readTree(content);
 
         if (!resultNode.has("selected_candidates") || !resultNode.path("selected_candidates").isArray()) {
@@ -323,8 +258,8 @@ public class LlmResponseGenerator implements ResponseGenerator {
                 .collect(Collectors.toList());
     }
 
-    private String parseAndValidateGeneration(String responseBody) throws Exception {
-        String content = extractJsonContent(responseBody);
+    private String parseAndValidateGeneration(String responseContent) throws Exception {
+        String content = extractJsonContent(responseContent);
         JsonNode resultNode = objectMapper.readTree(content);
 
         if (!resultNode.has("response")) {

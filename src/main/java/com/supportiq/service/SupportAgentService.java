@@ -28,13 +28,11 @@ public class SupportAgentService {
             "SUSPICIOUS_ACTIVITY",
             "FRAUD_CONCERN",
             "AMAZON_PAY_FRAUD_OR_SUSPICIOUS_TRANSACTION",
-            "SELLER_FRAUD_OR_COUNTERFEIT"
-    );
+            "SELLER_FRAUD_OR_COUNTERFEIT");
 
     // High-risk categories that always require human support
     private static final Set<IntentTaxonomy> HIGH_RISK_CATEGORIES = Set.of(
-            IntentTaxonomy.PRIVACY_AND_SECURITY
-    );
+            IntentTaxonomy.PRIVACY_AND_SECURITY);
 
     private final IntentClassifier intentClassifier;
     private final HistoricalRetriever historicalRetriever;
@@ -42,9 +40,9 @@ public class SupportAgentService {
     private final HumanSupportService humanSupportService;
 
     public SupportAgentService(IntentClassifier intentClassifier,
-                               HistoricalRetriever historicalRetriever,
-                               ResponseGenerator responseGenerator,
-                               HumanSupportService humanSupportService) {
+            HistoricalRetriever historicalRetriever,
+            ResponseGenerator responseGenerator,
+            HumanSupportService humanSupportService) {
         this.intentClassifier = intentClassifier;
         this.historicalRetriever = historicalRetriever;
         this.responseGenerator = responseGenerator;
@@ -53,7 +51,8 @@ public class SupportAgentService {
 
     /**
      * Main customer-facing orchestration method.
-     * Flow: AI #1 → Decision/Safety → (Retrieval + AI #2 for self-handle only) → Customer response
+     * Flow: AI #1 → Decision/Safety → (Retrieval + AI #2 for self-handle only) →
+     * Customer response
      * AI #3 (EscalationService) is NOT called.
      */
     public String handleMessage(CustomerMessage message) {
@@ -71,6 +70,13 @@ public class SupportAgentService {
             return SAFE_ERROR_RESPONSE;
         }
 
+        System.out.println("========== AI #1 RESULT ==========");
+        System.out.println("Category     : " + (intent != null ? intent.getCategory() : "null"));
+        System.out.println("Subcategory  : " + (intent != null ? intent.getSubCategory() : "null"));
+        System.out.println("Confidence   : " + (intent != null ? intent.getConfidence() : "null"));
+        System.out.println("Uncertain    : " + (intent != null ? intent.isUncertain() : "null"));
+        System.out.println("==================================");
+
         // 3. Evaluate AI #1 result through Decision/Safety layer
 
         // 3a. Check for null/invalid AI output
@@ -84,11 +90,15 @@ public class SupportAgentService {
         }
 
         // 3c. Check high-risk/security cases → human support (do NOT call AI #2)
+        System.out.println("========== SAFETY CHECK ==========");
+        System.out.println("High Risk    : " + isHighRisk(intent));
+        System.out.println("==================================");
         if (isHighRisk(intent)) {
             return humanSupportService.getHandoffMessage();
         }
 
-        // 3d. Check non-support/general information → safe direct response (do NOT call AI #2)
+        // 3d. Check non-support/general information → safe direct response (do NOT call
+        // AI #2)
         if (intent.getCategory() == IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT) {
             return NON_SUPPORT_RESPONSE;
         }
@@ -103,6 +113,10 @@ public class SupportAgentService {
             return SAFE_ERROR_RESPONSE;
         }
 
+        System.out.println("========== RETRIEVAL RESULT ==========");
+        System.out.println("Candidates   : " + (candidates != null ? candidates.size() : "null"));
+        System.out.println("=======================================");
+
         if (candidates == null || candidates.isEmpty()) {
             // No usable historical evidence — cannot fabricate an answer
             return humanSupportService.getHandoffMessage();
@@ -115,8 +129,7 @@ public class SupportAgentService {
                     candidate.getCategory(),
                     candidate.getSubcategory(),
                     candidate.getRootTweetId(),
-                    List.of(candidate.getInteractionPath())
-            ));
+                    List.of(candidate.getInteractionPath())));
         }
         RetrievedEvidence evidence = new RetrievedEvidence(conversations);
 
@@ -128,6 +141,10 @@ public class SupportAgentService {
             // AI #2 provider failure → safe customer-facing response
             return SAFE_ERROR_RESPONSE;
         }
+
+        System.out.println("========== AI #2 RESULT ==========");
+        System.out.println("Fallback     : " + LlmResponseGenerator.FALLBACK_RESPONSE.equals(response));
+        System.out.println("==================================");
 
         // 4c. Check if AI #2 returned its fallback (meaning it couldn't generate)
         if (LlmResponseGenerator.FALLBACK_RESPONSE.equals(response)) {

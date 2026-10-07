@@ -5,39 +5,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supportiq.data.IntentTaxonomy;
 import com.supportiq.model.CustomerMessage;
 import com.supportiq.model.Intent;
+import com.supportiq.service.provider.AiProvider;
+import com.supportiq.service.provider.AiProviderFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class LlmIntentClassifier implements IntentClassifier {
 
-    private final String apiUrl;
-    private final String apiKey;
-    private final String model;
     private final double confidenceThreshold;
-    private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-
-    private final long requestTimeoutSec;
+    private final AiProvider aiProvider;
 
     @org.springframework.beans.factory.annotation.Autowired
     public LlmIntentClassifier(
+            @Value("${supportiq.ai.provider:gemini}") String provider,
+            @Value("${supportiq.ai.model:#{null}}") String globalModel,
             @Value("${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
             @Value("${supportiq.classifier.model:gemini-3.6-flash}") String model,
             @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold,
             @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec,
             @Value("${supportiq.classifier.request-timeout-sec:30}") long requestTimeoutSec) {
-        this(apiUrl, resolveApiKey(), model, confidenceThreshold, 
+        this(provider, apiUrl, resolveApiKey(), (globalModel != null && !globalModel.trim().isEmpty()) ? globalModel : model, confidenceThreshold, 
              HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSec)).build(), requestTimeoutSec);
+    }
+
+    // Legacy constructor for compatibility
+    public LlmIntentClassifier(String apiUrl, String model, double confidenceThreshold, long connectTimeoutSec, long requestTimeoutSec) {
+        this("gemini", null, apiUrl, model, confidenceThreshold, connectTimeoutSec, requestTimeoutSec);
     }
 
     private static String resolveApiKey() {
@@ -48,13 +46,13 @@ public class LlmIntentClassifier implements IntentClassifier {
 
     // For testing
     LlmIntentClassifier(String apiUrl, String apiKey, String model, double confidenceThreshold, HttpClient httpClient, long requestTimeoutSec) {
-        this.apiUrl = apiUrl;
-        this.apiKey = apiKey;
-        this.model = model;
+        this("gemini", apiUrl, apiKey, model, confidenceThreshold, httpClient, requestTimeoutSec);
+    }
+
+    LlmIntentClassifier(String provider, String apiUrl, String apiKey, String model, double confidenceThreshold, HttpClient httpClient, long requestTimeoutSec) {
         this.confidenceThreshold = confidenceThreshold;
-        this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper();
-        this.requestTimeoutSec = requestTimeoutSec;
+        this.aiProvider = AiProviderFactory.create(provider, apiUrl, apiKey, model, httpClient, requestTimeoutSec, this.objectMapper);
     }
 
     @Override
@@ -62,15 +60,10 @@ public class LlmIntentClassifier implements IntentClassifier {
         if (message == null || message.getText() == null || message.getText().trim().isEmpty()) {
             return new Intent(null, null, 0.0, true);
         }
-        
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalStateException("AI API key is not configured.");
-        }
-
         try {
             String prompt = buildPrompt(message.getText());
-            String responseBody = callLlmApi(prompt);
-            return parseResponse(responseBody);
+            String content = aiProvider.generateContent(prompt);
+            return parseResponse(content);
         } catch (IllegalStateException e) {
             // Fail fast for permanent configuration errors like 404
             throw e;
@@ -110,76 +103,11 @@ public class LlmIntentClassifier implements IntentClassifier {
         return sb.toString();
     }
 
-    private String callLlmApi(String prompt) throws Exception {
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("systemInstruction", Map.of("parts", List.of(Map.of("text", "You are a helpful assistant that outputs only valid JSON."))));
-        
-        Map<String, Object> content = new HashMap<>();
-        content.put("parts", List.of(Map.of("text", prompt)));
-        requestBody.put("contents", List.of(content));
-
-        Map<String, Object> genConfig = new HashMap<>();
-        genConfig.put("temperature", 0.0);
-        genConfig.put("responseMimeType", "application/json");
-        requestBody.put("generationConfig", genConfig);
-
-        String jsonBody = objectMapper.writeValueAsString(requestBody);
-        String finalUrl = String.format(apiUrl, model);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(finalUrl))
-                .header("Content-Type", "application/json")
-                .header("x-goog-api-key", apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .timeout(Duration.ofSeconds(requestTimeoutSec))
-                .build();
-
-        int maxRetries = 3;
-        int delayMs = 1000;
-        
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            HttpResponse<String> response;
-            try {
-                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            } catch (java.net.http.HttpTimeoutException e) {
-                if (attempt == maxRetries) {
-                    throw new RuntimeException("AI provider timeout after " + maxRetries + " attempts.");
-                }
-                Thread.sleep(delayMs);
-                delayMs *= 2;
-                continue;
-            }
-            
-            int code = response.statusCode();
-            if (code == 200) {
-                return response.body();
-            } else if (code == 429 || code >= 500) {
-                if (attempt == maxRetries) {
-                    throw new RuntimeException("AI provider call failed with HTTP " + code);
-                }
-                Thread.sleep(delayMs);
-                delayMs *= 2; // Exponential backoff
-            } else if (code == 404) {
-                // Permanent configuration error: model not found
-                throw new IllegalStateException("AI provider model not found (HTTP 404).");
-            } else if (code == 401 || code == 403) {
-                throw new IllegalStateException("AI provider authentication failed (HTTP " + code + ").");
-            } else {
-                throw new RuntimeException("AI provider call failed with HTTP " + code);
-            }
+    private Intent parseResponse(String content) throws Exception {
+        if (content == null || content.trim().isEmpty()) {
+            throw new RuntimeException("Empty response content");
         }
-        throw new RuntimeException("AI classification request failed.");
-    }
-
-    private Intent parseResponse(String responseBody) throws Exception {
-        JsonNode rootNode = objectMapper.readTree(responseBody);
-        JsonNode messageNode = rootNode.path("candidates").path(0).path("content").path("parts").path(0).path("text");
-        
-        if (messageNode.isMissingNode()) {
-            throw new RuntimeException("Malformed API response: missing candidates[0].content.parts[0].text");
-        }
-        
-        String content = messageNode.asText().trim();
+        content = content.trim();
         // Sometimes the API returns markdown blocks like ```json\n{}\n```
         if (content.startsWith("```json")) {
             content = content.substring(7);

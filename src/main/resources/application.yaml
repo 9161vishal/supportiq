@@ -3,6 +3,11 @@ spring:
     name: supportiq
 
 supportiq:
+  # Global AI Configuration
+  ai:
+    provider: ${SUPPORTIQ_AI_PROVIDER:gemini}
+    model: ${SUPPORTIQ_AI_MODEL:}
+
   # AI #1 — Intent Classification
   classifier:
     api-url: https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent

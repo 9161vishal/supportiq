@@ -1,0 +1,40 @@
+version 2
+JvmtiExport can_access_local_variables 0
+JvmtiExport can_hotswap_or_post_breakpoint 1
+JvmtiExport can_post_on_exceptions 0
+# 283 ciObject found
+instanceKlass org/apache/maven/surefire/api/stream/AbstractStreamDecoder
+ciInstanceKlass java/lang/Cloneable 1 0 7 100 1 100 1 1 1
+instanceKlass java/util/concurrent/ThreadLocalRandom$Access$1
+instanceKlass jdk/internal/access/JavaUtilConcurrentTLRAccess
+instanceKlass java/util/concurrent/ThreadLocalRandom$Access
+instanceKlass org/apache/maven/plugin/surefire/report/TestMethodStats
+instanceKlass org/apache/maven/plugin/surefire/report/ConsoleReporter$1
+instanceKlass org/apache/maven/plugin/surefire/report/StatelessXmlReporter$ByteConstantsHolder
+instanceKlass org/apache/maven/plugin/surefire/report/StatelessXmlReporter$1
+instanceKlass org/apache/maven/surefire/shared/utils/xml/XMLEncode
+instanceKlass org/apache/maven/surefire/shared/utils/xml/PrettyPrintXMLWriter
+instanceKlass  @bci org/apache/maven/plugin/surefire/report/StatelessXmlReporter arrangeMethodStatistics (Lorg/apache/maven/plugin/surefire/report/WrappedReportEntry;Lorg/apache/maven/plugin/surefire/report/TestSetStats;)Ljava/util/Map; 79 <appendix> argL0 ; # org/apache/maven/plugin/surefire/report/StatelessXmlReporter$$Lambda+0x0000000027336458
+instanceKlass  @bci org/apache/maven/plugin/surefire/report/StatelessXmlReporter arrangeMethodStatistics (Lorg/apache/maven/plugin/surefire/report/WrappedReportEntry;Lorg/apache/maven/plugin/surefire/report/TestSetStats;)Ljava/util/Map; 53 <appendix> argL0 ; # org/apache/maven/plugin/surefire/report/StatelessXmlReporter$$Lambda+0x0000000027336210
+instanceKlass java/util/concurrent/ConcurrentLinkedDeque$AbstractItr
+instanceKlass java/text/DigitList$1
+instanceKlass java/text/FieldPosition$Delegate
+instanceKlass  @bci java/text/DecimalFormat format (Ljava/lang/Object;Ljava/text/Format$StringBuf;Ljava/text/FieldPosition;)Ljava/text/Format$StringBuf; 10 <appendix> member <vmtarget> ; # java/text/DecimalFormat$$TypeSwitch+0x00000000271e9888
+instanceKlass  @bci java/text/NumberFormat format (Ljava/lang/Object;Ljava/text/Format$StringBuf;Ljava/text/FieldPosition;)Ljava/text/Format$StringBuf; 10 <appendix> member <vmtarget> ; # java/text/NumberFormat$$TypeSwitch+0x00000000271e9678
+instanceKlass org/apache/maven/plugin/surefire/report/FileReporterUtils
+instanceKlass org/apache/maven/surefire/api/util/internal/ImmutableMap$Node
+instanceKlass  @bci java/util/concurrent/ConcurrentLinkedQueue clear ()V 1 <appendix> argL0 ; # java/util/concurrent/ConcurrentLinkedQueue$$Lambda+0x00000000271e9420
+instanceKlass java/util/stream/Nodes$DoubleArrayNode
+instanceKlass java/util/stream/Node$Builder$OfDouble
+instanceKlass java/util/stream/Sink$OfDouble
+instanceKlass java/util/function/DoubleConsumer
+instanceKlass  @bci java/util/stream/DoublePipeline toArray ()[D 1 <appendix> argL0 ; # java/util/stream/DoublePipeline$$Lambda+0x00000000271e85b8
+instanceKlass java/util/stream/DoubleStream
+instanceKlass  @bci java/text/ChoiceFormat applyPatternImpl (Ljava/lang/String;)V 420 <appendix> argL0 ; # java/text/ChoiceFormat$$Lambda+0x00000000271e7c80
+instanceKlass  @cpi java/text/ChoiceFormat 349 form vmentry <vmtarget> ; # java/lang/invoke/LambdaForm$DMH+0x0000000027334000
+instanceKlass java/util/function/ToDoubleFunction
+instanceKlass org/apache/maven/plugin/surefire/report/WrappedReportEntry
+instanceKlass java/util/regex/Matcher$ImmutableMatchResult
+instanceKlass  @bci org/apache/maven/surefire/api/util/SureFireFileManager create ()Lorg/apache/maven/surefire/api/util/TempFileManager; 58 <appendix> argL0 ; # org/apache/maven/surefire/api/util/SureFireFileManager$$Lambda+0x00000000273331e0
+instanceKlass  @bci org/apache/maven/surefire/api/util/SureFireFileManager create ()Lorg/apache/maven/surefire/api/util/TempFileManager; 50 <appendix> argL0 ; # org/apache/maven/surefire/api/util/SureFireFileManager$$Lambda+0x0000000027332f98
+instanceKlass  @bci org/apache/maven/surefire/api/util/SureFireFileManager create ()Lorg/apache/maven/surefire/api/util/TempFileManager; 35 <appendix> argL0 ; # org/apache/maven/surefire/api/util/SureFireFileManager$$Lambda+0x0000000027332d40
