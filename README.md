@@ -53,7 +53,9 @@ To run the data processing (when implemented), the raw dataset must be placed lo
     - **Grounding**: Generates a customer-facing response based strictly on the selected historical candidates (max 10). The final response generation receives ONLY the selected evidence.
     - **Prompt Injection Protection**: Employs explicit system instructions explicitly treating customer and historical messages as untrusted data.
     - **Configuration**: Properties include `supportiq.generator.api-url`, `supportiq.generator.model`, `supportiq.generator.relevance-threshold`.
-    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, malformed JSON, or conflicting/unsafe eviden- **Phase 6**: AI #3 Evaluation Infrastructure Implemented.
+    - **Fallback Behavior**: Safely falls back to a deterministic apology message if no relevant candidates exist, confidence/relevance is too low, API fails, malformed JSON, or conflicting/unsafe evidence.
+
+## Phase 6: AI #3 Evaluation Infrastructure Implemented
 
 ## SupportIQ Assessment Evaluation Report
 
