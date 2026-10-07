@@ -40,8 +40,9 @@ class GoldenDatasetTest {
             assertTrue(pair.has("query"), "pair must have a query");
             assertTrue(pair.has("humanAnswer"), "pair must have a humanAnswer");
             
-            // Ensure no extra fields in pair
-            assertEquals(2, pair.size(), "pair must have exactly 2 fields (query, humanAnswer)");
+            // Ensure no extra fields in pair (now 3 fields: query, humanAnswer, expectedIntent)
+            assertEquals(3, pair.size(), "pair must have exactly 3 fields (query, humanAnswer, expectedIntent)");
+            assertTrue(pair.has("expectedIntent"), "pair must have an expectedIntent");
             
             String id = node.get("id").asText();
             assertFalse(id.trim().isEmpty(), "id cannot be empty");
@@ -52,6 +53,15 @@ class GoldenDatasetTest {
             
             String humanAnswer = pair.get("humanAnswer").asText();
             assertFalse(humanAnswer.trim().isEmpty(), "humanAnswer cannot be empty");
+            
+            String expectedIntent = pair.get("expectedIntent").asText();
+            assertFalse(expectedIntent.trim().isEmpty(), "expectedIntent cannot be empty");
+            
+            try {
+                com.supportiq.data.IntentTaxonomy.valueOf(expectedIntent);
+            } catch (IllegalArgumentException e) {
+                fail("expectedIntent is not a valid taxonomy category: " + expectedIntent);
+            }
         }
     }
 }

@@ -25,7 +25,7 @@ public class LlmIntentClassifier implements IntentClassifier {
             @Value("${supportiq.ai.provider:gemini}") String provider,
             @Value("${supportiq.ai.model:#{null}}") String globalModel,
             @Value("${supportiq.classifier.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
-            @Value("${supportiq.classifier.model:gemini-3.6-flash}") String model,
+            @Value("${supportiq.classifier.model:gemini-1.5-flash}") String model,
             @Value("${supportiq.classifier.confidence-threshold:0.6}") double confidenceThreshold,
             @Value("${supportiq.classifier.connect-timeout-sec:10}") long connectTimeoutSec,
             @Value("${supportiq.classifier.request-timeout-sec:30}") long requestTimeoutSec) {
@@ -52,6 +52,9 @@ public class LlmIntentClassifier implements IntentClassifier {
     LlmIntentClassifier(String provider, String apiUrl, String apiKey, String model, double confidenceThreshold, HttpClient httpClient, long requestTimeoutSec) {
         this.confidenceThreshold = confidenceThreshold;
         this.objectMapper = new ObjectMapper();
+        if ("groq".equalsIgnoreCase(provider) && apiUrl != null && apiUrl.contains("googleapis.com")) {
+            apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+        }
         this.aiProvider = AiProviderFactory.create(provider, apiUrl, apiKey, model, httpClient, requestTimeoutSec, this.objectMapper);
     }
 

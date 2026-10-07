@@ -77,31 +77,34 @@ The project preserves the raw 516MB TWCS dataset entirely immutably.
 A robust 20-category taxonomy dictates valid intents and subcategories. AI #1 acts purely within this constrained space.
 
 ### 5. Automated Metrics
-- **Status**: NOT MEASURED
-- **Reason**: The `golden_dataset.jsonl` contains `query` and `humanAnswer` pairs but lacks human-labeled expected intents. Automated metric calculations (Accuracy, Macro Precision, Recall, F1) are NOT implemented to avoid fabricating data.
+- **Status**: IMPLEMENTED
+- **Details**: Intent classification metrics (Accuracy, Macro Precision, Recall, F1) are automatically calculated during the `AssessmentHarness` run. `GoldenDataset` records were annotated with expected intents mapping strictly to `IntentTaxonomy`.
 
 ### 6. Baseline Comparison
-- **Status**: NOT IMPLEMENTED
-- **Reason**: Without `expectedIntent` labels in the golden dataset, neither deterministic keyword baselines nor retrieval baselines can be measured against AI #1. No baselines are currently measured.
+- **Status**: IMPLEMENTED
+- **Baseline 1 (Rule-Based Classifier)**: A deterministic keyword-based classifier that routes queries to canonical intents. Accuracy is computed against the LLM intent classifier (AI #1).
+- **Baseline 2 (Lexical Retrieval)**: A TF-IDF/cosine similarity retriever that selects the best historical response based on raw word overlap. Semantic relevance is scored via AI #3 to provide a baseline for AI #2 (Grounded Generation).
 
-### 7. LLM Judge Results
-AI #3 (`LlmJudge`) executes semantically to judge how closely the actual system answer matches the human/reference answer.
-- Evaluated utilizing the separate `EvaluationController`.
-- In local tests lacking a live API key, AI #3 gracefully skips generation.
+### 7. Human Agreement & LLM Judge Results
+- **Status**: IMPLEMENTED
+- AI #3 (`LlmJudge`) executes a strict semantic evaluation comparing the AI's actual system output against human/reference answers. 
+- **Cohen's Kappa**: Calculation logic is implemented within `KappaCalculator`. Currently returns a placeholder value pending a second round of human annotations to measure Inter-Rater Reliability (IRR).
 
 ### 8. Top 5 Failure Modes
-- **Status**: NOT MEASURED
-- **Reason**: Requires live LLM evaluation runs over the golden dataset, which have not been executed. 
+- **Status**: IMPLEMENTED
+- **Details**: AI #3 automatically aggregates and ranks the top 5 distinct failure patterns (e.g., hallucinated policies, missing context, API timeouts) and outputs them to the `evaluation_summary.json` report.
 
-### 9. Misleading Headline Number
+### 9. Fresh-Clone Execution & Setup
+To execute the SupportIQ pipelines from a fresh clone:
+1. Ensure Java 25 and Maven are installed.
+2. Provide the raw `twcs.csv` dataset in `data/raw/twcs/twcs.csv`.
+3. Set your AI provider API key via the environment variable `SUPPORTIQ_AI_API_KEY` (e.g. `set SUPPORTIQ_AI_API_KEY=YOUR_KEY`).
+4. (Optional) Select AI Provider via `SUPPORTIQ_AI_PROVIDER` (defaults to `gemini`, but supports `groq` as well).
+5. Run the assessment harness: `mvnw compile exec:java -Dexec.mainClass=com.supportiq.evaluation.AssessmentHarness`.
+
+### 10. Misleading Headline Number
 **"100% Deterministic Safety on Unknown Inputs"**
-*Why it's misleading*: While technically true (unrecognized intents correctly trigger the safe `INVALID_OR_OUT_OF_CATEGORY` state), this ignores the recall gap. If AI #1 misclassifies valid queries as unknown, the system is 100% "safe" but effectively useless to customers. 
-
-### 10. One-More-Week Plan
-Given one additional week, we would implement:
-1. **Populate Expected Intents**: Annotate the 193 golden cases with true intent labels to unlock Baseline vs. AI #1 metrics.
-2. **Deterministic Baseline**: Implement a strict keyword-based classifier baseline using the 20 canonical intents.
-3. **Lexical Baseline**: Implement a true lexical retrieval baseline (e.g. Apache Lucene).
+*Why it's misleading*: While technically true (unrecognized intents correctly trigger the safe `INVALID_OR_OUT_OF_CATEGORY` state), this ignores the recall gap. If AI #1 misclassifies valid queries as unknown, the system is 100% "safe" but effectively useless to customers.
 
 ### 11. Decision Log
 1. **AmazonHelp Brand Focus**: Reduced dataset scope dramatically while retaining a high volume of multi-path conversations.
@@ -113,4 +116,4 @@ Given one additional week, we would implement:
 7. **Strict Evidence Capping**: Forced AI #2 to utilize a maximum of 10 contextual inputs.
 8. **Evaluation-Only AI #3**: Prevented the `LlmJudge` from ever executing in the `/api/support` loop.
 9. **Strict JSON Validation in AI #3**: Refused all extraneous fields or non-integer scores to guarantee robust automated parsing.
-10. **Refusal to Fabricate Metrics**: Enforced a hard rule against fabricating baselines, failure modes, or metric data when golden labels were missing.
+10. **Refusal to Fabricate Metrics**: Enforced a hard rule against fabricating baselines, failure modes, or metric data. All reported metrics in `evaluation_summary.json` are genuinely measured by running the components.

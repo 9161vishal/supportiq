@@ -35,7 +35,7 @@ public class LlmResponseGenerator implements ResponseGenerator {
             @Value("${supportiq.ai.provider:gemini}") String provider,
             @Value("${supportiq.ai.model:#{null}}") String globalModel,
             @Value("${supportiq.generator.api-url:https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent}") String apiUrl,
-            @Value("${supportiq.generator.model:gemini-3.6-flash}") String model,
+            @Value("${supportiq.generator.model:gemini-1.5-flash}") String model,
             @Value("${supportiq.generator.relevance-threshold:0.7}") double relevanceThreshold,
             @Value("${supportiq.generator.connect-timeout-sec:10}") long connectTimeoutSec,
             @Value("${supportiq.generator.request-timeout-sec:30}") long requestTimeoutSec) {
@@ -65,6 +65,9 @@ public class LlmResponseGenerator implements ResponseGenerator {
             long requestTimeoutSec) {
         this.relevanceThreshold = relevanceThreshold;
         this.objectMapper = new ObjectMapper();
+        if ("groq".equalsIgnoreCase(provider) && apiUrl != null && apiUrl.contains("googleapis.com")) {
+            apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+        }
         this.aiProvider = AiProviderFactory.create(provider, apiUrl, apiKey, model, httpClient, requestTimeoutSec, this.objectMapper);
     }
 
