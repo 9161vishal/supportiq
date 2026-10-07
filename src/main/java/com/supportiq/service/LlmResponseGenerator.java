@@ -69,13 +69,13 @@ public class LlmResponseGenerator implements ResponseGenerator {
     }
 
     @Override
-    public String generateResponse(CustomerMessage message, Intent intent, RetrievedEvidence evidence) {
+    public GenerationResult generateResponseWithEvidence(CustomerMessage message, Intent intent, RetrievedEvidence evidence) {
         if (message == null || message.getText() == null || message.getText().trim().isEmpty()) {
-            return FALLBACK_RESPONSE;
+            return new GenerationResult(FALLBACK_RESPONSE, evidence);
         }
 
         if (evidence == null || evidence.getHistoricalCases() == null || evidence.getHistoricalCases().isEmpty()) {
-            return FALLBACK_RESPONSE;
+            return new GenerationResult(FALLBACK_RESPONSE, evidence);
         }
 
         try {
@@ -84,20 +84,27 @@ public class LlmResponseGenerator implements ResponseGenerator {
             String selectionResponseContent = aiProvider.generateContent(selectionPrompt);
             List<HistoricalConversation> selectedCandidates = parseAndValidateSelection(selectionResponseContent, intent, evidence.getHistoricalCases());
 
+            RetrievedEvidence actualSelectedEvidence = new RetrievedEvidence(selectedCandidates);
+
             if (selectedCandidates.isEmpty()) {
-                return FALLBACK_RESPONSE;
+                return new GenerationResult(FALLBACK_RESPONSE, actualSelectedEvidence);
             }
 
             // STEP 2: Grounded Response Generation
             String generationPrompt = buildGenerationPrompt(message.getText(), intent, selectedCandidates);
             String generationResponseContent = aiProvider.generateContent(generationPrompt);
-            return parseAndValidateGeneration(generationResponseContent);
+            return new GenerationResult(parseAndValidateGeneration(generationResponseContent), actualSelectedEvidence);
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
             System.err.println("AI response generation failed: " + e.getMessage());
-            return FALLBACK_RESPONSE;
+            return new GenerationResult(FALLBACK_RESPONSE, evidence);
         }
+    }
+
+    @Override
+    public String generateResponse(CustomerMessage message, Intent intent, RetrievedEvidence evidence) {
+        return generateResponseWithEvidence(message, intent, evidence).response;
     }
 
     private String buildSelectionPrompt(String customerText, Intent intent, List<HistoricalConversation> candidates) {

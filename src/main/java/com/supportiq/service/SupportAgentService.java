@@ -56,9 +56,13 @@ public class SupportAgentService {
      * AI #3 (EscalationService) is NOT called.
      */
     public String handleMessage(CustomerMessage message) {
+        return handleMessageWithOutcome(message).getText();
+    }
+
+    public com.supportiq.model.AgentOutcome handleMessageWithOutcome(CustomerMessage message) {
         // 1. Validate incoming customer message
         if (message == null || message.getText() == null || message.getText().trim().isEmpty()) {
-            return "Please provide a message so I can assist you.";
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, "Please provide a message so I can assist you.", null, null);
         }
 
         // 2. Call AI #1 — Intent Classification
@@ -67,30 +71,30 @@ public class SupportAgentService {
             intent = intentClassifier.classify(message);
         } catch (Exception e) {
             // AI #1 provider failure → safe customer-facing response
-            return SAFE_ERROR_RESPONSE;
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, SAFE_ERROR_RESPONSE, null, "AI #1 Failure");
         }
 
         // 3. Evaluate AI #1 result through Decision/Safety layer
 
         // 3a. Check for null/invalid AI output
         if (intent == null || intent.getCategory() == null) {
-            return CLARIFICATION_RESPONSE;
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, CLARIFICATION_RESPONSE, null, "Null/invalid intent");
         }
 
         // 3b. Check uncertain intent → clarification (do NOT call AI #2)
         if (intent.isUncertain()) {
-            return CLARIFICATION_RESPONSE;
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, CLARIFICATION_RESPONSE, null, "Uncertain intent");
         }
 
         // 3c. Check high-risk/security cases → human support (do NOT call AI #2)
         if (isHighRisk(intent)) {
-            return humanSupportService.getHandoffMessage();
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, humanSupportService.getHandoffMessage(), null, "High-risk category/subcategory");
         }
 
         // 3d. Check non-support/general information → safe direct response (do NOT call
         // AI #2)
         if (intent.getCategory() == IntentTaxonomy.GENERAL_INFORMATION_AND_NON_SUPPORT) {
-            return NON_SUPPORT_RESPONSE;
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.INVALID_OR_OUT_OF_CATEGORY, NON_SUPPORT_RESPONSE, null, "Non-support category");
         }
 
         // 4. Self-handle path: Retrieve historical evidence + AI #2
@@ -100,12 +104,12 @@ public class SupportAgentService {
         try {
             candidates = historicalRetriever.retrieve(intent, 20);
         } catch (Exception e) {
-            return SAFE_ERROR_RESPONSE;
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, SAFE_ERROR_RESPONSE, null, "Retrieval Failure");
         }
 
         if (candidates == null || candidates.isEmpty()) {
             // No usable historical evidence — cannot fabricate an answer
-            return humanSupportService.getHandoffMessage();
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, humanSupportService.getHandoffMessage(), null, "No historical evidence");
         }
 
         // Convert HistoricalCandidate to HistoricalConversation for AI #2
@@ -120,20 +124,20 @@ public class SupportAgentService {
         RetrievedEvidence evidence = new RetrievedEvidence(conversations);
 
         // 4b. Call AI #2 — Evidence Selection + Grounded Response Generation
-        String response;
+        ResponseGenerator.GenerationResult genResult;
         try {
-            response = responseGenerator.generateResponse(message, intent, evidence);
+            genResult = responseGenerator.generateResponseWithEvidence(message, intent, evidence);
         } catch (Exception e) {
             // AI #2 provider failure → safe customer-facing response
-            return SAFE_ERROR_RESPONSE;
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, SAFE_ERROR_RESPONSE, evidence, "AI #2 Failure");
         }
 
         // 4c. Check if AI #2 returned its fallback (meaning it couldn't generate)
-        if (LlmResponseGenerator.FALLBACK_RESPONSE.equals(response)) {
-            return humanSupportService.getHandoffMessage();
+        if (LlmResponseGenerator.FALLBACK_RESPONSE.equals(genResult.response)) {
+            return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.HUMAN_ESCALATION, humanSupportService.getHandoffMessage(), genResult.selectedEvidence, "AI #2 returned fallback");
         }
 
-        return response;
+        return new com.supportiq.model.AgentOutcome(com.supportiq.model.AgentOutcome.ResponseType.AI_GENERATED, genResult.response, genResult.selectedEvidence, null);
     }
 
     /**

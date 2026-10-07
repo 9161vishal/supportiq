@@ -1,65 +1,57 @@
 package com.supportiq.evaluation;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class GoldenDatasetTest {
 
     @Test
     void testGoldenDatasetIntegrity() throws Exception {
-        Path goldenCsvPath = Paths.get("data/evaluation/golden_dataset.csv");
-        assertTrue(Files.exists(goldenCsvPath), "Golden dataset file must exist");
+        Path goldenJsonlPath = Paths.get("data/evaluation/golden_dataset.jsonl");
+        assertTrue(Files.exists(goldenJsonlPath), "Golden dataset JSONL file must exist");
         
-        List<String> lines = Files.readAllLines(goldenCsvPath);
-        assertTrue(lines.size() > 0, "Golden dataset should have at least a header");
+        List<String> lines = Files.readAllLines(goldenJsonlPath);
+        assertTrue(lines.size() >= 150 && lines.size() <= 200, "Golden dataset should have between 150 and 200 cases");
         
-        String header = lines.get(0);
-        assertTrue(header.contains("example_id"));
-        assertTrue(header.contains("source_tweet_id"));
-        assertTrue(header.contains("expected_intent"));
-        assertTrue(header.contains("expected_subcategory"));
-        assertTrue(header.contains("expected_escalation_decision"));
-        assertTrue(header.contains("expected_escalation_reason"));
-        assertTrue(header.contains("human_response_reference"));
-        assertTrue(header.contains("annotator_id"));
-        assertTrue(header.contains("annotation_timestamp"));
-        assertTrue(header.contains("annotator_b_intent"));
-        assertTrue(header.contains("annotator_b_decision"));
-        assertTrue(header.contains("annotator_b_reason"));
+        ObjectMapper mapper = new ObjectMapper();
+        Set<String> ids = new HashSet<>();
         
-        for (int i = 1; i < lines.size(); i++) {
-            String[] parts = parseCsvLine(lines.get(i));
-            assertEquals(12, parts.length, "Row should have exactly 12 columns");
-            assertFalse(parts[0].trim().isEmpty(), "example_id cannot be empty");
-            assertFalse(parts[1].trim().isEmpty(), "source_tweet_id cannot be empty");
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+            JsonNode node = mapper.readTree(line);
+            
+            // Check required fields
+            assertTrue(node.has("id"), "Record must have an id");
+            assertTrue(node.has("pair"), "Record must have a pair");
+            
+            // Ensure no extra fields at root
+            assertEquals(2, node.size(), "Record must have exactly 2 root fields (id, pair)");
+            
+            JsonNode pair = node.get("pair");
+            assertTrue(pair.has("query"), "pair must have a query");
+            assertTrue(pair.has("humanAnswer"), "pair must have a humanAnswer");
+            
+            // Ensure no extra fields in pair
+            assertEquals(2, pair.size(), "pair must have exactly 2 fields (query, humanAnswer)");
+            
+            String id = node.get("id").asText();
+            assertFalse(id.trim().isEmpty(), "id cannot be empty");
+            assertTrue(ids.add(id), "Duplicate id found: " + id);
+            
+            String query = pair.get("query").asText();
+            assertFalse(query.trim().isEmpty(), "query cannot be empty");
+            
+            String humanAnswer = pair.get("humanAnswer").asText();
+            assertFalse(humanAnswer.trim().isEmpty(), "humanAnswer cannot be empty");
         }
-    }
-    
-    private String[] parseCsvLine(String line) {
-        java.util.List<String> result = new java.util.ArrayList<>();
-        boolean inQuotes = false;
-        StringBuilder sb = new StringBuilder();
-        for (char c : line.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == ',' && !inQuotes) {
-                result.add(sb.toString());
-                sb.setLength(0);
-            } else {
-                sb.append(c);
-            }
-        }
-        result.add(sb.toString());
-        return result.toArray(new String[0]);
-    }
-    
-    @Test
-    void testJudgeResponseParsing() {
-        LlmJudge.JudgeResult res = new LlmJudge().evaluate(new com.supportiq.model.CustomerMessage("test"), new com.supportiq.model.SupportResponse(null, null, null, null));
-        assertFalse(res.success);
     }
 }

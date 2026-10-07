@@ -4,6 +4,7 @@ import com.supportiq.data.IntentTaxonomy;
 import com.supportiq.model.CustomerMessage;
 import com.supportiq.model.HistoricalCandidate;
 import com.supportiq.model.Intent;
+import com.supportiq.model.RetrievedEvidence;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,13 +86,14 @@ public class SupportAgentServiceTest {
         HistoricalCandidate candidate = new HistoricalCandidate(IntentTaxonomy.ORDER_MANAGEMENT, "CANCEL_ORDER", Collections.emptyList());
         when(historicalRetriever.retrieve(eq(normalIntent), anyInt())).thenReturn(List.of(candidate));
         
-        when(responseGenerator.generateResponse(any(), eq(normalIntent), any())).thenReturn("I have cancelled your order.");
+        when(responseGenerator.generateResponseWithEvidence(any(), eq(normalIntent), any()))
+                .thenReturn(new ResponseGenerator.GenerationResult("I have cancelled your order.", new RetrievedEvidence(Collections.emptyList())));
 
         String response = supportAgentService.handleMessage(new CustomerMessage("Cancel my order"));
         
         assertEquals("I have cancelled your order.", response);
         verify(historicalRetriever).retrieve(eq(normalIntent), anyInt());
-        verify(responseGenerator).generateResponse(any(), eq(normalIntent), any());
+        verify(responseGenerator).generateResponseWithEvidence(any(), eq(normalIntent), any());
     }
 
     @Test
@@ -116,12 +118,13 @@ public class SupportAgentServiceTest {
         HistoricalCandidate candidate = new HistoricalCandidate(IntentTaxonomy.ORDER_MANAGEMENT, "CANCEL_ORDER", Collections.emptyList());
         when(historicalRetriever.retrieve(eq(normalIntent), anyInt())).thenReturn(List.of(candidate));
         
-        when(responseGenerator.generateResponse(any(), eq(normalIntent), any())).thenReturn(LlmResponseGenerator.FALLBACK_RESPONSE);
+        when(responseGenerator.generateResponseWithEvidence(any(), eq(normalIntent), any()))
+                .thenReturn(new ResponseGenerator.GenerationResult(LlmResponseGenerator.FALLBACK_RESPONSE, new RetrievedEvidence(Collections.emptyList())));
 
         String response = supportAgentService.handleMessage(new CustomerMessage("Cancel my order"));
         
         assertEquals("Human Handoff", response);
         verify(historicalRetriever).retrieve(eq(normalIntent), anyInt());
-        verify(responseGenerator).generateResponse(any(), eq(normalIntent), any());
+        verify(responseGenerator).generateResponseWithEvidence(any(), eq(normalIntent), any());
     }
 }
